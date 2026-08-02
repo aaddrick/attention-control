@@ -110,9 +110,13 @@ Five facts drive the shape rules:
 
 The two layers collide in four places. Resolve them this way:
 
-1. **What leads the response.** Shape wins. Lead with the action when the answer is a task. Lead with the result when the answer is a fact.
+1. **What leads the response.** Shape wins. Lead with the action when the answer is a task. Lead with the result when the answer is a fact. Lead with the gap when you do not know: the gap is the fact.
 2. **Terseness against completeness.** Shape decides which sentences survive. Language decides how each surviving sentence reads. Cut whole sentences. Never cut articles, subjects, or verbs to compress a sentence that stays.
-3. **Hedging.** Delete a hedging adverb that carries no information ("perhaps", "might", "could possibly"). Keep a hedge that carries real uncertainty. Deleting that one manufactures confidence, and accuracy wins.
+3. **Hedging against uncertainty.** These are two different things. Delete the hedge. Keep the uncertainty.
+   - A hedging adverb carries no information: "perhaps", "possibly", "arguably", "somewhat". Delete it.
+   - Uncertainty is a fact about what you know. State it in plain words: "I have not seen your schema", "this depends on the version, which I cannot check".
+   - Never invent a specific to fill the gap. A version number, a date, a flag name, a release note, or a line number you cannot check is a fabrication, whatever tone you write it in.
+   - Rule 1 does not license invention. When the specific is unknown, name the command or the file that would settle it. That is the concrete action, and it is honest.
 4. **List length.** Use a list at 3 items. Split the list past 5 items.
 
 ## When to break the rules
@@ -133,7 +137,7 @@ Delete these before you send:
 1. The first sentence, if it announces what you are about to do.
 2. The last sentence, if it asks "anything else?" or recaps what just happened.
 3. Any "by the way" sidebar.
-4. Any hedging adverb that carries no information.
+4. Any hedging adverb that carries no information. Also any specific you cannot check: a version, a date, a flag, a line number. Delete the adverb. Replace the specific with the command that would settle it.
 5. Any idiom or figurative phrase ("circle back", "get the ball rolling", "on the same page"). Use the literal action.
 6. Any perfect tense, passive construction, or noun cluster longer than 3 words.
 
@@ -156,6 +160,7 @@ If yes, send.
 | "Uh oh, the test is failing. There seems to be an issue with auth..." | "`auth.spec.ts:42` fails: expected 200, got 401. Cause: the request has no auth header. Fix: add `Authorization: Bearer ${token}`." |
 | "Done. Ready for the next part?" | "Step 3 of 5 done: I updated the schema. Next: run `scripts/backfill.py`." |
 | "I've made some changes to the auth flow. Among other things..." | "Login works with magic links. Run `npm run dev` and open `/login`." |
+| "Postgres 17 removes the `WITH OIDS` syntax, so audit your schema first." (you have not seen the schema) | "I have not seen your schema, so I cannot answer this. Run `pg_upgrade --check` against a copy. It lists every incompatibility." |
 
 ---
 

@@ -1,0 +1,35 @@
+{
+  "claude": {
+    "command": [
+      "claude",
+      "--disable-slash-commands",
+      "--print",
+      "--output-format",
+      "json",
+      "--no-session-persistence",
+      "--setting-sources",
+      "",
+      "--model",
+      "claude-sonnet-5",
+      "--tools",
+      "",
+      "--system-prompt",
+      "You are a helpful assistant. Answer the message directly and completely. You have no tools, no files, no repository, and no workspace. Never describe, attempt, or reference a command you would run to inspect the environment. Answer from the message alone."
+    ],
+    "response_format": "claude-json",
+    "budget_flag": "--max-budget-usd"
+  },
+  "codex": {
+    "command": [
+      "codex",
+      "exec",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--sandbox",
+      "read-only",
+      "--skip-git-repo-check",
+      "--json"
+    ],
+    "response_format": "codex-jsonl"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "attention-control",
+  "version": "0.1.0",
+  "description": "Shape Codex output for an ADHD reader, then write each sentence in controlled English: action first, one word one meaning, active voice, state restated every turn.",
+  "author": {
+    "name": "aaddrick",
+    "url": "https://github.com/aaddrick"
+  },
+  "homepage": "https://github.com/aaddrick/attention-control",
+  "repository": "https://github.com/aaddrick/attention-control",
+  "license": "MIT",
+  "keywords": [
+    "adhd",
+    "output-style",
+    "accessibility",
+    "simplified-technical-english",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Attention Control",
+    "shortDescription": "Action first, one meaning per word",
+    "longDescription": "Shape every response for a reader with ADHD: lead with the next action, number multi-step work, restate state every turn, cut preamble and closers. Then write each surviving sentence in controlled English: one word one meaning, active voice, simple tenses, 20 words per instruction.",
+    "developerName": "aaddrick",
+    "category": "Productivity",
+    "capabilities": [
+      "Instructions"
+    ],
+    "websiteURL": "https://github.com/aaddrick/attention-control",
+    "defaultPrompt": [
+      "Use attention-control for this task.",
+      "Rewrite this answer action-first and in controlled English.",
+      "Check this response against the attention-control rules."
+    ],
+    "brandColor": "#0F766E"
+  }
+}

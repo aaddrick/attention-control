@@ -1,0 +1,7 @@
+interface:
+  display_name: "Attention Control"
+  short_description: "Action first, one meaning per word"
+  default_prompt: "Use $attention-control to make this response action-first and written in controlled English."
+
+policy:
+  allow_implicit_invocation: true

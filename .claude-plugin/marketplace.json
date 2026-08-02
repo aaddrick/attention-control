@@ -1,0 +1,24 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "attention-control",
+  "description": "Air traffic control discipline for agent output: action first, one meaning per word, state restated every turn.",
+  "owner": {
+    "name": "aaddrick",
+    "url": "https://github.com/aaddrick"
+  },
+  "plugins": [
+    {
+      "name": "attention-control",
+      "description": "Output style that shapes every response for an ADHD reader and writes each sentence in controlled English.",
+      "source": "./",
+      "category": "productivity",
+      "keywords": [
+        "adhd",
+        "output-style",
+        "accessibility",
+        "simplified-technical-english",
+        "productivity"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+name: plugin loads in Claude Code
+
+# Installs the plugin from this checkout into a scratch CLAUDE_CONFIG_DIR and
+# fails if it does not reach "enabled". Catches load-layer breakage that JSON
+# validation misses, such as a component path that points at nothing.
+on:
+  pull_request:
+    paths:
+      - .claude-plugin/**
+      - output-styles/**
+      - skills/**
+      - .github/workflows/plugin-load-check.yml
+  push:
+    branches: [main]
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Install the plugin from this checkout into a scratch config
+        run: |
+          export CLAUDE_CONFIG_DIR="$RUNNER_TEMP/claude-scratch"
+          mkdir -p "$CLAUDE_CONFIG_DIR"
+          claude plugin marketplace add "$GITHUB_WORKSPACE"
+          claude plugin install attention-control@attention-control
+          claude plugin list | tee plugin-list.txt
+          grep -q "✔ enabled" plugin-list.txt || {
+            echo "::error::plugin failed to load; see claude plugin list output above"
+            exit 1
+          }

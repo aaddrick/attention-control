@@ -13,6 +13,268 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import run_evals  # noqa: E402
 
 
+class IsolationPromptTest(unittest.TestCase):
+    """The isolation prompt must not contradict a premise a case states.
+
+    An early version told the runner "You have no tools, no files, no
+    repository, and no workspace." The `agent-owned-edit` case tells it "you
+    have access to the repository." Every response denied the premise, scored
+    1.0 on autonomy under both conditions, and drew a blocking finding. The
+    prompt that protected the run from the environment contaminated the run
+    instead.
+    """
+
+    DENIALS = ("no tools", "no files", "no repository", "no workspace", "have no")
+
+    def _system_prompt(self):
+        config = json.loads((ROOT / "evals" / "runners.example.json").read_text(encoding="utf-8"))
+        command = config["claude"]["command"]
+        return command[command.index("--system-prompt") + 1]
+
+    def test_prompt_denies_no_capability_a_case_asserts(self):
+        prompt = self._system_prompt().lower()
+        found = [phrase for phrase in self.DENIALS if phrase in prompt]
+
+        self.assertEqual([], found, f"the isolation prompt denies a stated premise: {found}")
+
+    def test_prompt_still_forbids_inspecting_the_environment(self):
+        prompt = self._system_prompt().lower()
+
+        self.assertIn("never describe, attempt, or reference a command", prompt)
+        self.assertIn("answer from the message alone", prompt)
+
+    def test_prompt_tells_the_runner_to_accept_stated_premises(self):
+        self.assertIn("accept the premises", self._system_prompt().lower())
+
+    def test_every_runner_pins_a_model(self):
+        config = json.loads((ROOT / "evals" / "runners.example.json").read_text(encoding="utf-8"))
+        metered = {
+            name: runner
+            for name, runner in config.items()
+            if runner.get("response_format") == "claude-json"
+        }
+        self.assertTrue(metered, "expected at least one cost-reporting runner")
+        for name, runner in metered.items():
+            with self.subTest(runner=name):
+                self.assertIsNotNone(run_evals.runner_model(runner["command"]))
+
+
+class ProvenanceTest(unittest.TestCase):
+    """Every response row records what produced it.
+
+    evals/README.md requires a recorded model beside any published number. The
+    first full run carried none, so nothing links its results to a model.
+    """
+
+    def test_model_is_read_from_the_runner_command(self):
+        self.assertEqual("claude-sonnet-5", run_evals.runner_model(["claude", "--model", "claude-sonnet-5"]))
+        self.assertEqual("x", run_evals.runner_model(["claude", "--model=x"]))
+        self.assertEqual("y", run_evals.runner_model(["claude", "-m", "y"]))
+        self.assertIsNone(run_evals.runner_model(["claude", "--print"]))
+        self.assertIsNone(run_evals.runner_model(["claude", "--model"]))
+
+    def test_style_hash_separates_the_conditions(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            style = Path(tmp) / "style.md"
+            style.write_text("be brief")
+            command = ["claude", "--model", "m"]
+            cases = ROOT / "evals" / "cases.jsonl"
+
+            baseline = run_evals.provenance(command, cases, None)
+            candidate = run_evals.provenance(command, cases, style)
+
+            self.assertIsNone(baseline["style_sha256"])
+            self.assertIsNotNone(candidate["style_sha256"])
+            self.assertEqual(baseline["cases_sha256"], candidate["cases_sha256"])
+
+    def test_drift_names_every_field_that_changed(self):
+        prior = [
+            {
+                "condition": "candidate",
+                "model": "old",
+                "runner_sha256": "a",
+                "cases_sha256": "b",
+                "style_sha256": "c",
+            }
+        ]
+        current = {
+            "model": "new",
+            "runner_sha256": "a",
+            "cases_sha256": "b",
+            "style_sha256": "z",
+        }
+
+        self.assertEqual(["model", "style_sha256"], run_evals.check_provenance(prior, current, "candidate"))
+        self.assertEqual([], run_evals.check_provenance(prior, current, "baseline"))
+
+    def test_run_records_provenance_and_refuses_to_resume_after_drift(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            runner_config = tmp_path / "runners.json"
+            runner_config.write_text(
+                json.dumps(
+                    {
+                        "stub": {
+                            "command": ["sh", "-c", "echo hi", "--model", "stub-1"],
+                            "response_format": "text",
+                        }
+                    }
+                )
+            )
+            args = argparse.Namespace(
+                cases=ROOT / "evals" / "cases.jsonl",
+                runner_config=runner_config,
+                runner="stub",
+                condition="baseline",
+                condition_skill=None,
+                case=["direct-answer"],
+                split="all",
+                trials=1,
+                retries=0,
+                budget_usd=1.0,
+                allow_unmetered=True,
+                allow_unpinned_model=False,
+                allow_provenance_drift=False,
+                output=tmp_path / "out.jsonl",
+            )
+
+            self.assertEqual(0, run_evals.run_evaluations(args))
+            row = run_evals.read_jsonl(args.output)[0]
+            self.assertEqual("stub-1", row["model"])
+            for field in run_evals.PROVENANCE_FIELDS:
+                self.assertIn(field, row)
+
+            # Repin the model, then resume into the same file.
+            runner_config.write_text(
+                json.dumps(
+                    {
+                        "stub": {
+                            "command": ["sh", "-c", "echo hi", "--model", "stub-2"],
+                            "response_format": "text",
+                        }
+                    }
+                )
+            )
+            args.case = ["code-answer"]
+            with self.assertRaisesRegex(RuntimeError, "different model"):
+                run_evals.run_evaluations(args)
+
+            args.allow_provenance_drift = True
+            self.assertEqual(0, run_evals.run_evaluations(args))
+            self.assertEqual(
+                {"stub-1", "stub-2"},
+                {row["model"] for row in run_evals.read_jsonl(args.output)},
+            )
+
+    def test_run_refuses_an_unpinned_model(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            runner_config = tmp_path / "runners.json"
+            runner_config.write_text(
+                json.dumps({"stub": {"command": ["echo", "hi"], "response_format": "text"}})
+            )
+            args = argparse.Namespace(
+                cases=ROOT / "evals" / "cases.jsonl",
+                runner_config=runner_config,
+                runner="stub",
+                condition="baseline",
+                condition_skill=None,
+                case=["direct-answer"],
+                split="all",
+                trials=1,
+                retries=0,
+                budget_usd=1.0,
+                allow_unmetered=True,
+                allow_unpinned_model=False,
+                allow_provenance_drift=False,
+                output=tmp_path / "out.jsonl",
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "pins no --model"):
+                run_evals.run_evaluations(args)
+            self.assertFalse(args.output.exists())
+
+    def test_blinding_never_carries_provenance_to_the_judge(self):
+        """The style hash differs by condition, so it names the condition."""
+        responses = []
+        for condition, style in (("baseline", None), ("candidate", "deadbeef")):
+            responses.append(
+                {
+                    "case_id": "direct-answer",
+                    "trial": 1,
+                    "condition": condition,
+                    "runner": "claude",
+                    "model": "m",
+                    "runner_sha256": "r",
+                    "cases_sha256": "c",
+                    "style_sha256": style,
+                    "response": "102",
+                    "cost_usd": 0.01,
+                }
+            )
+
+        blind, key = run_evals.blind_responses(responses)
+
+        for row in blind:
+            self.assertEqual(
+                {"blind_id", "case_id", "trial", "label", "response"},
+                set(row),
+                "a blinded row carried a field the judge must not see",
+            )
+        self.assertEqual({"baseline", "candidate"}, {row["condition"] for row in key})
+
+
+class CaseSplitTest(unittest.TestCase):
+    """The dev set is what you tune against. The holdout is what checks you.
+
+    Tuning a style against a fixed case set until the release gate passes
+    measures memorization of those cases. Only a set you never iterated
+    against separates a better style from a better fit.
+    """
+
+    def setUp(self):
+        self.cases = run_evals.load_cases(ROOT / "evals" / "cases.jsonl")
+
+    def test_every_case_declares_a_split(self):
+        for case in self.cases:
+            with self.subTest(case=case["id"]):
+                self.assertIn(case["split"], run_evals.SPLITS)
+
+    def test_holdout_is_smaller_than_dev_and_large_enough_to_matter(self):
+        counts = Counter(case["split"] for case in self.cases)
+
+        self.assertGreaterEqual(counts["holdout"], 4)
+        self.assertLess(counts["holdout"], counts["dev"])
+
+    def test_holdout_covers_categories_the_dev_set_also_covers(self):
+        """A holdout category absent from dev cannot detect overfitting in it."""
+        dev = {case["category"] for case in self.cases if case["split"] == "dev"}
+        holdout = {case["category"] for case in self.cases if case["split"] == "holdout"}
+
+        self.assertGreaterEqual(len(holdout & dev), 4)
+
+    def test_validate_rejects_a_missing_split(self):
+        broken = [{k: v for k, v in case.items() if k != "split"} for case in self.cases]
+
+        errors = run_evals.validate_cases(broken)
+
+        self.assertTrue(any("split" in error for error in errors))
+
+    def test_validate_rejects_a_holdout_that_swallows_the_dev_set(self):
+        broken = [{**case, "split": "holdout"} for case in self.cases]
+
+        errors = run_evals.validate_cases(broken)
+
+        self.assertTrue(any("not smaller than the dev set" in error for error in errors))
+
+    def test_validate_rejects_an_unknown_split(self):
+        broken = [{**case, "split": "train"} for case in self.cases]
+
+        errors = run_evals.validate_cases(broken)
+
+        self.assertTrue(any("split must be one of" in error for error in errors))
+
+
 class EvaluationHarnessTest(unittest.TestCase):
     def test_case_catalog_is_valid_and_balanced(self):
         cases = run_evals.load_cases(ROOT / "evals" / "cases.jsonl")
@@ -111,6 +373,7 @@ class EvaluationHarnessTest(unittest.TestCase):
         case = {
             "id": "duplicate",
             "category": "direct-answer",
+            "split": "dev",
             "prompt": "What is 2 + 2?",
             "risk": "low",
             "criteria": ["Answers 4."],
@@ -147,10 +410,13 @@ class EvaluationHarnessTest(unittest.TestCase):
                 condition="baseline",
                 condition_skill=None,
                 case=["direct-answer"],
+                split="all",
                 trials=1,
                 retries=0,
                 budget_usd=1.0,
                 allow_unmetered=False,
+                allow_unpinned_model=True,
+                allow_provenance_drift=False,
                 output=tmp_path / "out.jsonl",
             )
 
@@ -185,10 +451,13 @@ class EvaluationHarnessTest(unittest.TestCase):
                 condition="baseline",
                 condition_skill=None,
                 case=["direct-answer"],
+                split="all",
                 trials=1,
                 retries=0,
                 budget_usd=1.0,
                 allow_unmetered=True,
+                allow_unpinned_model=True,
+                allow_provenance_drift=False,
                 output=tmp_path / "out.jsonl",
             )
 

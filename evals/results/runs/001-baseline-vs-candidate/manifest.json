@@ -1,0 +1,65 @@
+{
+  "run_id": "001",
+  "slug": "baseline-vs-candidate",
+  "created": "2026-08-02",
+  "git_sha": "04b16f7",
+  "git_dirty_at_freeze": true,
+  "model": "unrecorded",
+  "runner": "claude",
+  "conditions": [
+    "baseline",
+    "candidate"
+  ],
+  "trials": 3,
+  "blind_seed": 0,
+  "judge_passes": 2,
+  "cases_count": 24,
+  "split": "all",
+  "responses": 144,
+  "inputs": {
+    "cases": {
+      "path": "evals/cases.jsonl",
+      "sha256": "fa8549dfa431a18e3c8e2d673d2e9de9bc076c3085db9427aef849bab8e42a21"
+    },
+    "rubric": {
+      "path": "evals/rubric.md",
+      "sha256": "512cd93d3f908e89c0c89d506463acd11e6b04c5bcb030040749a657394e5542"
+    },
+    "style": {
+      "path": "output-styles/attention-control.md",
+      "sha256": "88c64d1075d40490f2a19c70efb6791581625534dac76c43dd102a8d34381bf2"
+    },
+    "runner_config": {
+      "path": "evals/runners.example.json",
+      "sha256": "4aba12136e2daab643ce39eef71d813d6ab32e0429abec37926c9b246018b401"
+    }
+  },
+  "cost_usd": {
+    "run": 3.0009,
+    "judge": 7.9801,
+    "total": 10.981
+  },
+  "notes": [
+    "First full paired run: 24 cases, 3 trials, baseline against candidate.",
+    "Model is unrecorded. responses.jsonl carried no model field and evals/runners.json is gitignored and absent. Every comparison against this run rests on an assumption.",
+    "agent-owned-edit is unpassable in this run. The case prompt states the agent has repository access; the runner system prompt denies it. All 6 responses scored autonomy 1.0 and all 6 drew a blocker.",
+    "real-ambiguity drew 2 baseline blockers from the same contradiction.",
+    "75% of the weighted gain comes from language and concision, the two dimensions whose rubric checklist restates the style's own rules.",
+    "Superseded as a reference point by run 002, which reworded the isolation prompt."
+  ],
+  "comparability_key": "cdb8372807a4",
+  "gate_passed": true,
+  "weighted_delta": 0.4486,
+  "stability": {
+    "groups_total": 72,
+    "groups_flipped": 12,
+    "groups_tied": 9,
+    "groups_skipped": 0,
+    "flip_rate_all": 0.1667,
+    "flip_rate_excl_ties": 0.1905
+  },
+  "blocking_findings": {
+    "baseline": 9,
+    "candidate": 7
+  }
+}

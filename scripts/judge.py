@@ -166,6 +166,11 @@ def winner_flip_rate(rows: list[dict[str, Any]]) -> dict[str, Any]:
     0.563 in published measurements, well under the 0.8 threshold for good
     agreement. A single judging pass hides that. Recording every pass makes the
     instability measurable instead of invisible.
+
+    A tie means the two passes agreed that neither response won. Counting a tie
+    as agreement and dropping it from the denominator give different rates, and
+    one rate alone hides which choice produced it. Report both, and name the
+    denominator in each field.
     """
     groups: dict[tuple[str, int, int], dict[str, dict[str, Any]]] = defaultdict(dict)
     for row in rows:
@@ -178,22 +183,26 @@ def winner_flip_rate(rows: list[dict[str, Any]]) -> dict[str, Any]:
         tied = len(ranked) > 1 and weighted(ranked[1]) == weighted(top)
         by_case[(case_id, trial)][index] = None if tied else top["label"]
 
-    compared = flipped = tied = 0
+    total = flipped = tied = skipped = 0
     for verdicts in by_case.values():
         if len(verdicts) < 2:
+            skipped += 1
             continue
         winners = [verdicts[index] for index in sorted(verdicts)]
+        total += 1
         if any(winner is None for winner in winners):
             tied += 1
             continue
-        compared += 1
         if len(set(winners)) > 1:
             flipped += 1
+    decided = total - tied
     return {
-        "groups_compared": compared,
+        "groups_total": total,
         "groups_flipped": flipped,
         "groups_tied": tied,
-        "flip_rate": round(flipped / compared, 4) if compared else None,
+        "groups_skipped": skipped,
+        "flip_rate_all": round(flipped / total, 4) if total else None,
+        "flip_rate_excl_ties": round(flipped / decided, 4) if decided else None,
     }
 
 

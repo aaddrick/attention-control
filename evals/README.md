@@ -1,11 +1,12 @@
 # Evaluations
 
-The pipeline runs in five commands, in this order: `validate`, `run`, `blind`,
-`judge.py`, and `score`.
+The pipeline runs in six commands, in this order: `validate`, `run`, `blind`,
+`judge.py`, `score`, and `ledger.py freeze`.
 
 The harness compares response quality against an unstyled baseline. It does not
 measure length. Cases live in `cases.jsonl`. The scoring contract lives in
-`rubric.md`.
+`rubric.md`. Every finished run lives in `results/runs/`, indexed by
+`results/LEDGER.md`.
 
 ## Validate and plan
 
@@ -13,6 +14,19 @@ measure length. Cases live in `cases.jsonl`. The scoring contract lives in
 python3 scripts/run_evals.py validate
 python3 scripts/run_evals.py plan --trials 3 --include-comparator
 ```
+
+## Two splits
+
+Every case declares `"split": "dev"` or `"split": "holdout"`. `run` and `plan`
+default to `dev`.
+
+Iterate against the 16 dev cases. Save the 8 holdout cases for the run you make
+when you believe the work is finished. A style tuned against a fixed case set
+until the gate passes has learned those cases. Only a set you never iterated
+against separates a better style from a closer fit.
+
+`validate` refuses a catalog whose holdout holds fewer than 4 cases, or whose
+holdout is not smaller than its dev set.
 
 ## Run
 
@@ -24,6 +38,7 @@ identical across conditions.
 python3 scripts/run_evals.py run \
   --runner claude \
   --condition baseline \
+  --split dev \
   --trials 3 \
   --budget-usd 12.50 \
   --output evals/results/responses.jsonl
@@ -32,6 +47,7 @@ python3 scripts/run_evals.py run \
   --runner claude \
   --condition candidate \
   --condition-style output-styles/attention-control.md \
+  --split dev \
   --trials 3 \
   --budget-usd 12.50 \
   --output evals/results/responses.jsonl
@@ -49,10 +65,18 @@ Runs resume. Run the same command again after a provider failure. The harness
 skips the completed `(case, trial, condition, runner)` rows. It retries each
 incomplete call twice by default. It keeps the final provider error.
 
-## Isolation: three leaks, all closed
+Every response row records the model, plus a hash of the runner command, the
+case catalog, and the style file. `run` refuses to resume into a results file
+whose earlier rows carry different values, because no later step could separate
+them again. Pass `--allow-provenance-drift` to override.
+
+`run` also refuses a runner command that pins no `--model`. Pass
+`--allow-unpinned-model` to override.
+
+## Isolation: four leaks, all closed
 
 An early run of this harness measured itself instead of the style. The harness
-now closes each leak below, and a test covers each fix. Keep all three when you
+now closes each leak below, and a test covers each fix. Keep all four when you
 add a runner.
 
 ### No user config
@@ -90,9 +114,9 @@ coding-agent system prompt:
 
 ```
 You are a helpful assistant. Answer the message directly and completely. You
-have no tools, no files, no repository, and no workspace. Never describe,
-attempt, or reference a command you would run to inspect the environment. Answer
-from the message alone.
+cannot run commands or read files in this conversation. Accept the premises the
+message states and answer from the message alone. Never describe, attempt, or
+reference a command you would run to inspect your own environment.
 ```
 
 Without it, the agent tries to look around a workspace that does not exist. A
@@ -103,6 +127,25 @@ the replaced prompt returned 7,196 characters and a phased plan.
 
 This choice sets the scope of any result the harness produces. It measures the
 style's effect on **prose**, not on agentic behaviour.
+
+### No premise denial
+
+The prompt above forbids inspecting the environment. It does not deny facts a
+case states. That distinction cost a full run to find.
+
+An earlier wording read "You have no tools, no files, no repository, and no
+workspace." The `agent-owned-edit` case opens with "you have access to the
+repository." Every response denied the premise. All 6 scored **1.0 on
+autonomy** under both conditions, and all 6 drew a blocking finding. The case
+produced a weighted delta of exactly 0.000 while consuming 6 of the run's 16
+blockers. `real-ambiguity` drew 2 more baseline blockers from the same cause.
+
+The prompt that protected the run from the environment contaminated the run
+instead. A test now asserts the prompt contains no capability denial, and still
+forbids environment inspection.
+
+Read this as a general rule for any isolation you add. Isolation that
+contradicts the task measures the isolation.
 
 ## Blind
 
@@ -162,12 +205,22 @@ It writes two files:
 It prints a stability line before the cost:
 
 ```json
-{"groups_compared": 60, "groups_flipped": 9, "groups_tied": 0, "flip_rate": 0.15}
+{"groups_total": 72, "groups_flipped": 12, "groups_tied": 9, "groups_skipped": 0,
+ "flip_rate_all": 0.1667, "flip_rate_excl_ties": 0.1905}
 ```
 
 That is how often the two passes disagreed about which response was better, on
 this eval, with this judge. Nobody publishes that number. Record yours next to
 any result you report.
+
+Two rates, because a tie is a judgement call. A tie means both passes agreed
+that neither response won. Counting a tie as agreement gives `flip_rate_all`.
+Dropping ties from the denominator gives `flip_rate_excl_ties`. On the run
+above the two differ by 2.4 points. One field alone would hide which choice
+produced the number, so the field names carry the denominator.
+
+`groups_skipped` counts groups the judge scored fewer than twice. A run with a
+non-zero value there measured stability on less than the full set.
 
 To judge by hand instead, skip the script. Write rows keyed by `blind_id`:
 
@@ -190,6 +243,46 @@ python3 scripts/run_evals.py score evals/results/scores.jsonl \
 
 Record the exact CLI and model versions with published results. Do not compare
 conditions produced with different cases, models, trial counts, or rubrics.
+
+## Freeze
+
+```bash
+python3 scripts/ledger.py freeze \
+  --run-id 002 --slug fixed-isolation-prompt --date 2026-08-03 \
+  --judge-cost 7.98 \
+  --note "Reworded the isolation prompt so it denies no stated premise."
+
+python3 scripts/ledger.py index
+```
+
+`freeze` moves the five result files into `results/runs/<id>-<slug>/`, writes a
+`manifest.json` beside them, and derives `report.md` from the data. `index`
+rebuilds `results/LEDGER.md` from every manifest. Commit the directory.
+
+The manifest records a **comparability key**: a digest of the model, the trial
+count, and the hashes of `cases.jsonl`, `rubric.md`, the style file, and the
+runner config. Two runs compare only when their keys match. `LEDGER.md` marks a
+key that appears once as `(alone)`, because such a run has nothing to compare
+against.
+
+Hashes come from the run's recorded git commit, not from the working tree.
+Editing a file afterward must not rewrite the history of a finished run.
+
+```bash
+python3 scripts/ledger.py compare 001 002
+```
+
+`compare` names every input that changed between two runs. It warns when more
+than one changed, because the difference between those runs cannot then be
+attributed to any single one. Change one input per run.
+
+The freeze step exists because iteration destroys evidence. A field guide to
+[staged evaluator pipelines][guide] names the three things such pipelines lack
+against a century-old peer-review process: an adjudicator, a record, and a
+norm. `LEDGER.md` is the record. The comparability key is the norm. You are the
+adjudicator.
+
+[guide]: https://github.com/aaddrick/staged-evaluator-pipelines/blob/main/poster/eo-field-guide-carousel.pdf
 
 ## Why the judge is built this way
 

@@ -10,6 +10,7 @@ also blocks a candidate whose language score does not beat baseline, and a
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shlex
 import string
@@ -33,6 +34,61 @@ WEIGHTS = {
     "concision": 0.10,
 }
 CONDITIONS = {"baseline", "candidate", "comparator"}
+# `dev` is the set you iterate against. `holdout` is the set you run once, when
+# you believe you are done. Tuning a style against a fixed case set until the
+# gate passes measures memorization; the holdout is what catches that.
+SPLITS = {"dev", "holdout"}
+# The fields that must hold constant across every row of one results file.
+# A run that resumes after an edit to the cases, the style, or the runner
+# command produces rows that no longer answer the same question.
+PROVENANCE_FIELDS = ("model", "runner_sha256", "cases_sha256", "style_sha256")
+
+
+def sha256_text(payload: str) -> str:
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def sha256_file(path: Path | None) -> str | None:
+    return sha256_text(path.read_text(encoding="utf-8")) if path and path.exists() else None
+
+
+def runner_model(command: list[str]) -> str | None:
+    """Read the pinned model out of the runner command.
+
+    The README requires a recorded model beside every published number. Reading
+    it from the command the harness actually invokes beats a flag the operator
+    fills in by hand, because a hand-filled flag records what the operator
+    believed instead of what ran.
+    """
+    for index, token in enumerate(command):
+        if token in ("--model", "-m") and index + 1 < len(command):
+            return command[index + 1]
+        if token.startswith("--model="):
+            return token.split("=", 1)[1]
+    return None
+
+
+def provenance(command: list[str], cases_path: Path, style_path: Path | None) -> dict[str, Any]:
+    return {
+        "model": runner_model(command),
+        "runner_sha256": sha256_text("\x1f".join(command)),
+        "cases_sha256": sha256_file(cases_path),
+        "style_sha256": sha256_file(style_path),
+    }
+
+
+def check_provenance(
+    prior_rows: list[dict[str, Any]], current: dict[str, Any], condition: str
+) -> list[str]:
+    """Name every provenance field that drifted since the earlier rows."""
+    drifted: list[str] = []
+    for row in prior_rows:
+        if row.get("condition") != condition:
+            continue
+        for field in PROVENANCE_FIELDS:
+            if field in row and row[field] != current[field] and field not in drifted:
+                drifted.append(field)
+    return drifted
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -106,6 +162,10 @@ def blind_responses(
         order = order[offset:] + order[:offset]
         for label, row in zip(string.ascii_uppercase, order):
             handle = _blind_id(case_id, trial, label)
+            # An allowlist, never a blocklist. A response row carries the style
+            # hash, which differs between conditions and names the condition to
+            # anyone who reads it. Copying the row and deleting known fields
+            # leaks every field added later.
             blind.append(
                 {
                     "blind_id": handle,
@@ -183,7 +243,7 @@ def blind_scores(args: argparse.Namespace) -> int:
 def validate_cases(cases: list[dict[str, Any]]) -> list[str]:
     errors: list[str] = []
     seen: set[str] = set()
-    required = {"id", "category", "prompt", "risk", "criteria"}
+    required = {"id", "category", "prompt", "risk", "criteria", "split"}
     for index, case in enumerate(cases, start=1):
         missing = sorted(required - set(case))
         if missing:
@@ -198,8 +258,24 @@ def validate_cases(cases: list[dict[str, Any]]) -> list[str]:
             seen.add(case_id)
         if case["risk"] not in {"low", "medium", "high"}:
             errors.append(f"Case {case_id}: risk must be low, medium, or high")
+        if case["split"] not in SPLITS:
+            errors.append(f"Case {case_id}: split must be one of {', '.join(sorted(SPLITS))}")
         if not isinstance(case["criteria"], list) or not case["criteria"]:
             errors.append(f"Case {case_id}: criteria must be a non-empty list")
+
+    # A holdout that never grows measures less every time you tune against dev.
+    # A holdout that grows past the dev set wastes cases you could iterate on.
+    counts = Counter(case.get("split") for case in cases if case.get("split") in SPLITS)
+    if not errors and counts["holdout"] < 4:
+        errors.append(
+            f"The holdout set has {counts['holdout']} cases. Fewer than 4 cannot detect "
+            "a style tuned to the dev set."
+        )
+    if not errors and counts["holdout"] >= counts["dev"]:
+        errors.append(
+            f"The holdout set ({counts['holdout']}) is not smaller than the dev set "
+            f"({counts['dev']}). Move cases into dev."
+        )
     return errors
 
 
@@ -346,6 +422,10 @@ def run_evaluations(args: argparse.Namespace) -> int:
     unknown = sorted(set(args.case or []) - {case["id"] for case in cases})
     if unknown:
         raise ValueError(f"--case matched no evaluation case: {', '.join(unknown)}")
+    if args.split != "all":
+        cases = [case for case in cases if case["split"] == args.split]
+        if not cases:
+            raise ValueError(f"--split {args.split} matched no evaluation case")
     config = json.loads(args.runner_config.read_text(encoding="utf-8"))
     runner = config[args.runner]
     command = list(runner["command"])
@@ -363,6 +443,22 @@ def run_evaluations(args: argparse.Namespace) -> int:
         for row in prior_rows
         if row.get("condition") == args.condition and row.get("runner") == args.runner
     )
+
+    stamp = provenance(command, args.cases, args.condition_skill)
+    if stamp["model"] is None and not args.allow_unpinned_model:
+        raise RuntimeError(
+            f"The {args.runner!r} command pins no --model. The eval then runs whatever the "
+            "operator or the CLI release defaults to, and the model varies between operators "
+            "and over time. Pin one, or rerun with --allow-unpinned-model."
+        )
+    drifted = check_provenance(prior_rows, stamp, args.condition)
+    if drifted and not args.allow_provenance_drift:
+        raise RuntimeError(
+            f"{args.output} already holds {args.condition} rows produced with a different "
+            f"{', '.join(drifted)}. Resuming would mix them into one results file, and no "
+            "later step could separate them. Start a new output file, or rerun with "
+            "--allow-provenance-drift."
+        )
 
     if args.budget_usd <= 0 or args.budget_usd > 25:
         raise ValueError("--budget-usd must be greater than 0 and no more than 25")
@@ -430,6 +526,7 @@ def run_evaluations(args: argparse.Namespace) -> int:
                     "trial": trial,
                     "condition": args.condition,
                     "runner": args.runner,
+                    **stamp,
                     "response": text,
                     "usage": usage,
                     "cost_usd": cost,
@@ -451,6 +548,7 @@ def _build_parser() -> argparse.ArgumentParser:
     plan = subparsers.add_parser("plan", help="Print the paired run matrix as JSONL")
     plan.add_argument("--cases", type=Path, default=DEFAULT_CASES)
     plan.add_argument("--trials", type=int, default=3)
+    plan.add_argument("--split", choices=["dev", "holdout", "all"], default="dev")
     plan.add_argument("--include-comparator", action="store_true")
 
     blind = subparsers.add_parser(
@@ -478,10 +576,26 @@ def _build_parser() -> argparse.ArgumentParser:
     run.add_argument("--condition", choices=sorted(CONDITIONS), required=True)
     run.add_argument("--condition-style", "--condition-skill", dest="condition_skill", type=Path)
     run.add_argument("--case", action="append")
+    run.add_argument(
+        "--split",
+        choices=["dev", "holdout", "all"],
+        default="dev",
+        help="Which case split to run. Iterate against dev; save holdout for the final run.",
+    )
     run.add_argument("--trials", type=int, default=3)
     run.add_argument("--retries", type=int, default=2)
     run.add_argument("--budget-usd", type=float, default=25.0)
     run.add_argument("--allow-unmetered", action="store_true")
+    run.add_argument(
+        "--allow-unpinned-model",
+        action="store_true",
+        help="Run even though the runner command pins no model",
+    )
+    run.add_argument(
+        "--allow-provenance-drift",
+        action="store_true",
+        help="Append to a results file whose earlier rows used different inputs",
+    )
     run.add_argument("--output", type=Path, required=True)
     run.set_defaults(handler=run_evaluations)
     return parser
@@ -505,13 +619,24 @@ def main(argv: list[str] | None = None) -> int:
         errors = validate_cases(cases)
         if errors:
             raise ValueError("\n".join(errors))
+        if args.split != "all":
+            cases = [case for case in cases if case["split"] == args.split]
         conditions = ["baseline", "candidate"]
         if args.include_comparator:
             conditions.append("comparator")
         for trial in range(1, args.trials + 1):
             for case in cases:
                 for condition in conditions:
-                    print(json.dumps({"case_id": case["id"], "trial": trial, "condition": condition}))
+                    print(
+                        json.dumps(
+                            {
+                                "case_id": case["id"],
+                                "trial": trial,
+                                "condition": condition,
+                                "split": case["split"],
+                            }
+                        )
+                    )
         return 0
     if args.command == "score":
         rows = read_jsonl(args.scores)

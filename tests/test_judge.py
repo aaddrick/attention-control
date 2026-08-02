@@ -100,11 +100,38 @@ class JudgeTest(unittest.TestCase):
 
         stability = judge.winner_flip_rate(rows)
 
-        self.assertEqual(2, stability["groups_compared"])
+        self.assertEqual(2, stability["groups_total"])
         self.assertEqual(1, stability["groups_flipped"])
-        self.assertEqual(0.5, stability["flip_rate"])
+        self.assertEqual(0, stability["groups_tied"])
+        self.assertEqual(0.5, stability["flip_rate_all"])
+        self.assertEqual(0.5, stability["flip_rate_excl_ties"])
 
-    def test_flip_rate_sets_ties_aside(self):
+    def test_flip_rate_reports_both_denominators(self):
+        """A tie changes the rate, so the report must name which rate it gives.
+
+        One tie among four groups moves the rate from 0.25 to 0.3333. A single
+        `flip_rate` field hides that choice from anyone reading the number.
+        """
+        rows = []
+        for case_id, first, second in (
+            ("stable", (5, 3), (5, 3)),
+            ("flipped", (5, 3), (2, 4)),
+            ("tied", (4, 4), (5, 3)),
+            ("also-stable", (5, 3), (5, 3)),
+        ):
+            for index, (left, right) in enumerate((first, second)):
+                rows.append(self._judgement(case_id, index, "A", left))
+                rows.append(self._judgement(case_id, index, "B", right))
+
+        stability = judge.winner_flip_rate(rows)
+
+        self.assertEqual(4, stability["groups_total"])
+        self.assertEqual(1, stability["groups_flipped"])
+        self.assertEqual(1, stability["groups_tied"])
+        self.assertEqual(0.25, stability["flip_rate_all"])
+        self.assertEqual(0.3333, stability["flip_rate_excl_ties"])
+
+    def test_flip_rate_counts_a_tie_as_agreement_not_as_exclusion(self):
         rows = [
             self._judgement("tied", 0, "A", 4),
             self._judgement("tied", 0, "B", 4),
@@ -114,9 +141,23 @@ class JudgeTest(unittest.TestCase):
 
         stability = judge.winner_flip_rate(rows)
 
-        self.assertEqual(0, stability["groups_compared"])
+        self.assertEqual(1, stability["groups_total"])
         self.assertEqual(1, stability["groups_tied"])
-        self.assertIsNone(stability["flip_rate"])
+        self.assertEqual(0, stability["groups_flipped"])
+        self.assertEqual(0.0, stability["flip_rate_all"])
+        self.assertIsNone(stability["flip_rate_excl_ties"])
+
+    def test_flip_rate_skips_a_group_judged_once(self):
+        rows = [
+            self._judgement("single", 0, "A", 5),
+            self._judgement("single", 0, "B", 3),
+        ]
+
+        stability = judge.winner_flip_rate(rows)
+
+        self.assertEqual(0, stability["groups_total"])
+        self.assertEqual(1, stability["groups_skipped"])
+        self.assertIsNone(stability["flip_rate_all"])
 
     @staticmethod
     def _metrics(value):

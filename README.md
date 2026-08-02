@@ -135,24 +135,24 @@ Full text: [`output-styles/attention-control.md`](./output-styles/attention-cont
 
 ## Why the shape rules exist
 
-Five facts about ADHD reading drive all 10 shape rules. Each fact below names
+Five facts about ADHD reading drive all 11 shape rules. Each fact below names
 the rules it produces.
 
 | The fact | What the agent does |
 |---|---|
-| **Working memory is small.** Anything not on screen is gone. | It never writes "keep in mind X". It restates the state every turn: "Step 3 of 5 done: I changed the schema. Next: run `scripts/backfill.py`." (rules 5, 9) |
-| **Knowing the answer is not doing the answer.** Work dies in the gap between the two. | It gives the command, not the label. "Add the missing header" is a label. `Authorization: Bearer ${token}` is a fix. (rules 1, 2) |
-| **Starting is the hardest step.** | The first line is small, obvious, and doable now. The last line names one action that takes under two minutes. "Open the file" counts. (rules 1, 3) |
-| **Time estimates feel uniform.** "A bit of work" and "a few hours" register the same. | It writes "about 15 minutes if tests cover this, an afternoon if not". It never writes "some work". (rule 6) |
-| **Dopamine is scarce.** A buried win does not register. | After a change, it names the result in concrete terms: "Login works with magic links. Run `npm run dev` and open `/login`." (rule 7) |
+| **Working memory is small.** Anything not on screen is gone. | It never writes "keep in mind X". It restates the state every turn: "Step 3 of 5 done: I changed the schema. Next: run `scripts/backfill.py`." (rules 6, 10) |
+| **Knowing the answer is not doing the answer.** Work dies in the gap between the two. | It does the work it owns instead of handing it back. It gives the command, not the label. "Add the missing header" is a label. `Authorization: Bearer ${token}` is a fix. (rules 1, 2, 3) |
+| **Starting is the hardest step.** | The first line is small, obvious, and doable now. The last line names one action that takes under two minutes. "Open the file" counts. (rules 1, 4) |
+| **Time estimates feel uniform.** "A bit of work" and "a few hours" register the same. | It writes "about 15 minutes if tests cover this, an afternoon if not". It never writes "some work". (rule 7) |
+| **Dopamine is scarce.** A buried win does not register. | After a change, it names the result in concrete terms: "Login works with magic links. Run `npm run dev` and open `/login`." (rule 8) |
 
-Two more rules protect attention itself. Rule 4 suppresses tangents, so one open
-thread stays one open thread. Rule 10 removes the preamble and the closer, so
+Two more rules protect attention itself. Rule 5 suppresses tangents, so one open
+thread stays one open thread. Rule 11 removes the preamble and the closer, so
 the answer starts on line 1.
 
 This is why the style is not "be terse". Terseness that drops the command, the
 number, or the condition costs the reader a round trip, and a round trip costs
-the thread. Rule 8 follows from the same logic: an error gets a location, a
+the thread. Rule 9 follows from the same logic: an error gets a location, a
 cause, and a fix, with no "Uh oh" in front of it. Alarm is not information, and
 it competes with the information for the same attention.
 

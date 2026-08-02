@@ -315,7 +315,7 @@ For a harness that reads `AGENTS.md`, copy this repo's generated
 ## The always-on snippet
 
 Paste this into whichever file your agent loads on every session. It is the
-short form: the 10 shape rules plus the language rules that matter most.
+short form: the 11 shape rules plus the language rules that matter most.
 
 ```markdown
 ## Output style
@@ -326,15 +326,16 @@ instruction. Apply the same two disciplines to every response.
 Shape:
 
 1. Lead with the next action: a command, a path, or a snippet. Not context.
-2. Number multi-step work. One bounded action per step.
-3. End with one concrete next action, doable in under two minutes.
-4. Suppress tangents. Finish the current issue first.
-5. Restate state every turn ("Step 3 of 5 done: I updated the schema.").
-6. Give time estimates in concrete units. Never "some work".
-7. After a change, name what now works and how to see it.
-8. State errors flat: location, cause, fix. No "uh oh".
-9. Cap lists at 5 items. Past five, split into now/later.
-10. No preamble, no recap, no closer.
+2. Do the work you own. Never hand back a step you can finish yourself.
+3. Number multi-step work. One bounded action per step.
+4. End with one concrete next action, doable in under two minutes.
+5. Suppress tangents. Finish the current issue first.
+6. Restate state every turn ("Step 3 of 5 done: I updated the schema.").
+7. Give time estimates in concrete units. Never "some work".
+8. After a change, name what now works and how to see it.
+9. State errors flat: location, cause, fix. No "uh oh".
+10. Cap lists at 5 items. Past five, split into now/later.
+11. No preamble, no recap, no closer.
 
 Language:
 

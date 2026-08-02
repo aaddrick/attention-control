@@ -1,6 +1,12 @@
 <p align="center">
   <strong>Attention Control</strong><br>
-  <em>항공 교통 관제의 규율을 AI 출력에.</em>
+  <em>항공 교통 관제의 규율을 AI 출력에.</em><br>
+  <em>ADHD 독자를 위해 썼습니다.</em>
+</p>
+
+<p align="center">
+  <a href="../../LICENSE"><img src="https://img.shields.io/github/license/aaddrick/attention-control?style=flat" alt="License"></a>
+  <a href="../workflows/plugin-load-check.yml"><img src="https://img.shields.io/github/actions/workflow/status/aaddrick/attention-control/plugin-load-check.yml?label=plugin%20loads&style=flat" alt="Plugin load check"></a>
 </p>
 
 <p align="center">
@@ -60,6 +66,9 @@ codex plugin add attention-control@attention-control
 
 이 스타일은 같은 두 규율을 코딩 에이전트에 적용합니다. 에이전트는 바로 실행할 수 있는
 동작을 먼저 제시하고, 한 단어가 한 가지 뜻만 갖도록 각 문장을 씁니다.
+
+이 스타일이 겨냥하는 독자는 한 종류입니다. ADHD가 있는 독자입니다. 형태 규칙은 그
+독자에서 나왔습니다. [형태 규칙이 나온 이유](#형태-규칙이-나온-이유)를 참고하세요.
 
 ## 무엇이 달라지는가
 
@@ -122,6 +131,30 @@ codex plugin add attention-control@attention-control
 
 전문은 [`output-styles/attention-control.md`](../../output-styles/attention-control.md)에 있습니다.
 
+## 형태 규칙이 나온 이유
+
+ADHD 독서에 관한 다섯 가지 사실이 형태 규칙 10개를 모두 만듭니다. 아래 표는 각
+사실이 어떤 규칙을 낳는지 보여 줍니다.
+
+| 사실 | 에이전트가 하는 일 |
+|---|---|
+| **작업 기억이 작다.** 화면에 없는 것은 없는 것과 같다. | "X를 기억해 두세요"라고 쓰지 않습니다. 매 턴 상태를 다시 말합니다. "5단계 중 3단계 완료: 스키마를 바꿨습니다. 다음: `scripts/backfill.py`를 실행하세요." (규칙 5, 9) |
+| **답을 아는 것과 답을 실행하는 것은 다르다.** 일은 그 사이 틈에서 멈춘다. | 이름표가 아니라 명령을 줍니다. "빠진 헤더를 추가하세요"는 이름표입니다. `Authorization: Bearer ${token}`이 수정입니다. (규칙 1, 2) |
+| **시작이 가장 어려운 단계다.** | 첫 줄은 작고, 분명하고, 지금 바로 할 수 있습니다. 마지막 줄은 2분 안에 끝나는 동작 하나를 짚습니다. "파일을 여세요"도 해당합니다. (규칙 1, 3) |
+| **시간 추정이 다 비슷하게 들린다.** "조금 걸려요"와 "몇 시간"이 똑같이 들린다. | "테스트가 덮고 있으면 15분쯤, 아니면 반나절"이라고 씁니다. "작업이 좀 있습니다"라고 쓰지 않습니다. (규칙 6) |
+| **도파민이 부족하다.** 묻힌 성과는 와닿지 않는다. | 바꾼 뒤에는 결과를 구체적으로 말합니다. "매직 링크 로그인이 됩니다. `npm run dev`를 실행하고 `/login`을 여세요." (규칙 7) |
+
+두 규칙이 주의력 자체를 지킵니다. 규칙 4는 곁가지를 눌러서 열린 작업 줄기를 하나로
+유지합니다. 규칙 10은 서두와 마무리 인사를 없애서 답이 첫 줄에서 시작하게 합니다.
+
+그래서 이 스타일은 "짧게 쓰기"가 아닙니다. 명령, 숫자, 조건을 버리는 간결함은
+독자에게 왕복 한 번을 떠넘기고, 그 왕복이 작업 줄기를 끊습니다. 규칙 8도 같은
+논리입니다. 오류에는 위치, 원인, 수정을 적고 앞에 "이런"을 붙이지 않습니다. 놀람은
+정보가 아니며, 정보와 같은 주의력을 두고 다툽니다.
+
+ADHD 진단이 있어야 도움이 되는 것은 아닙니다. 지친 독자, 휴대폰으로 읽는 독자,
+탭 40개를 열어 둔 독자 모두 같은 방식으로 읽습니다.
+
 ## 절대 건드리지 않는 것
 
 코드, 명령, 파일 경로, 식별자, 오류 메시지, 인용문은 글자 하나까지 그대로 옮깁니다.
@@ -141,7 +174,30 @@ python3 scripts/run_evals.py plan --trials 3
 ```
 
 20개 사례, 6개 채점 항목, 그리고 정확성이나 안전성 퇴보를 막는 릴리스 게이트.
-[evals/README.md](../../evals/README.md)를 참고하세요.
+
+가장 약한 고리는 심사자라서 하니스가 그 지점을 겨냥합니다. `blind`는 조건을 감추고
+제시 위치를 고르게 맞춥니다. 심사자는 각 묶음을 두 번 채점하고, 두 번째는 순서를
+뒤집은 뒤, 두 결과가 얼마나 어긋나는지 보고합니다. 러너는 빈 디렉터리에서 돌고
+여러분의 설정을 전혀 읽지 않습니다. 설계 근거와 측정값은
+[evals/README.md](../../evals/README.md)에 있습니다.
+
+## 직접 손보기
+
+포크한 뒤 `output-styles/attention-control.md`를 편집하고, 에이전트별 사본을 다시
+생성하세요.
+
+```bash
+python3 scripts/sync_style.py
+```
+
+자신의 사본으로 교체하세요.
+
+```bash
+claude plugin uninstall attention-control
+claude plugin marketplace remove attention-control
+claude plugin marketplace add <your-username>/attention-control
+claude plugin install attention-control@attention-control
+```
 
 ## 크레딧
 

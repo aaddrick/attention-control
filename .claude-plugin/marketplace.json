@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
   "name": "attention-control",
-  "description": "Air traffic control discipline for agent output: action first, one meaning per word, state restated every turn.",
+  "description": "Air traffic control discipline for agent output, written for a reader with ADHD: action first, one meaning per word, state restated every turn.",
   "owner": {
     "name": "aaddrick",
     "url": "https://github.com/aaddrick"

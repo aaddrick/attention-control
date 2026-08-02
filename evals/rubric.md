@@ -36,7 +36,9 @@ prevents the reader from finishing the task.
 
 Release the candidate only when all five hold:
 
-1. It has no blocking findings.
+1. It has no more blocking findings than baseline. The count is relative. A hard
+   case draws a blocker under every condition, so an absolute threshold measures
+   the case rather than the candidate.
 2. Correctness and safety are each within 0.1 points of baseline or better.
 3. Its language score beats baseline.
 4. Its weighted score beats baseline.

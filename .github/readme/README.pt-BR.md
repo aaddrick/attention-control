@@ -1,6 +1,12 @@
 <p align="center">
   <strong>Attention Control</strong><br>
-  <em>A disciplina do controle de tráfego aéreo aplicada à saída da IA.</em>
+  <em>A disciplina do controle de tráfego aéreo aplicada à saída da IA.</em><br>
+  <em>Escrito para um leitor com TDAH.</em>
+</p>
+
+<p align="center">
+  <a href="../../LICENSE"><img src="https://img.shields.io/github/license/aaddrick/attention-control?style=flat" alt="License"></a>
+  <a href="../workflows/plugin-load-check.yml"><img src="https://img.shields.io/github/actions/workflow/status/aaddrick/attention-control/plugin-load-check.yml?label=plugin%20loads&style=flat" alt="Plugin load check"></a>
 </p>
 
 <p align="center">
@@ -61,6 +67,9 @@ mensagem põe a instrução na frente e o contexto no fim.
 
 Este estilo aplica as duas disciplinas ao seu agente de código. O agente começa
 pela ação que você pode executar e escreve cada frase com uma palavra, um sentido.
+
+O estilo mira um leitor só: um leitor com TDAH. É desse leitor que vêm as regras de
+forma. Veja [Por que as regras de forma existem](#por-que-as-regras-de-forma-existem).
 
 ## O que muda
 
@@ -125,6 +134,32 @@ pela ação que você pode executar e escreve cada frase com uma palavra, um sen
 
 Texto completo: [`output-styles/attention-control.md`](../../output-styles/attention-control.md).
 
+## Por que as regras de forma existem
+
+Cinco fatos sobre a leitura com TDAH geram as 10 regras de forma. Cada fato abaixo
+nomeia as regras que produz.
+
+| O fato | O que o agente faz |
+|---|---|
+| **A memória de trabalho é pequena.** O que não está na tela sumiu. | Ele nunca escreve "tenha em mente X". Ele repete o estado a cada turno: "Etapa 3 de 5 pronta: mudei o schema. Próximo: rode `scripts/backfill.py`." (regras 5, 9) |
+| **Saber a resposta não é executar a resposta.** O trabalho morre na lacuna entre as duas coisas. | Ele dá o comando, não o rótulo. "Adicione o cabeçalho que falta" é um rótulo. `Authorization: Bearer ${token}` é a correção. (regras 1, 2) |
+| **Começar é a etapa mais difícil.** | A primeira linha é pequena, óbvia e possível agora. A última linha nomeia uma ação de menos de dois minutos. "Abra o arquivo" vale. (regras 1, 3) |
+| **As estimativas de tempo soam todas iguais.** "Um pouco de trabalho" e "algumas horas" registram do mesmo jeito. | Ele escreve "uns 15 minutos se houver teste cobrindo isso, uma tarde se não houver". Ele nunca escreve "um pouco de trabalho". (regra 6) |
+| **A dopamina é escassa.** Uma vitória enterrada não registra. | Depois de uma mudança, ele nomeia o resultado em termos concretos: "O login por magic link funciona. Rode `npm run dev` e abra `/login`." (regra 7) |
+
+Outras duas regras protegem a própria atenção. A regra 4 suprime tangentes, então
+uma frente aberta continua sendo uma só. A regra 10 remove o preâmbulo e o fecho,
+então a resposta começa na linha 1.
+
+Por isso o estilo não é "seja breve". A brevidade que descarta o comando, o número
+ou a condição custa uma ida e volta ao leitor, e essa ida e volta custa o fio da
+tarefa. A regra 8 vem da mesma lógica: um erro recebe local, causa e correção, sem
+um "opa" na frente. Alarme não é informação, e disputa a mesma atenção que a
+informação.
+
+Você não precisa de um diagnóstico de TDAH para isto ajudar. Um leitor cansado, um
+leitor no celular e um leitor com 40 abas abertas leem do mesmo jeito.
+
 ## O que ele nunca toca
 
 Código, comandos, caminhos de arquivo, identificadores, mensagens de erro e texto
@@ -146,7 +181,31 @@ python3 scripts/run_evals.py plan --trials 3
 ```
 
 20 casos, 6 dimensões de pontuação e um portão de release que barra um candidato
-que regride em correção ou segurança. Veja [evals/README.md](../../evals/README.md).
+que regride em correção ou segurança.
+
+O juiz é o ponto fraco, então o harness mira nele. O `blind` esconde a condição e
+equilibra as posições. O juiz pontua cada grupo duas vezes, com a ordem invertida na
+segunda, e depois relata com que frequência as duas passagens discordam. O runner
+roda em um diretório vazio e não lê nenhuma configuração sua. Notas de projeto e as
+medições por trás delas: [evals/README.md](../../evals/README.md).
+
+## Ajuste do seu jeito
+
+Faça um fork, edite `output-styles/attention-control.md` e regenere cada cópia
+específica de agente:
+
+```bash
+python3 scripts/sync_style.py
+```
+
+Troque pela sua cópia:
+
+```bash
+claude plugin uninstall attention-control
+claude plugin marketplace remove attention-control
+claude plugin marketplace add <your-username>/attention-control
+claude plugin install attention-control@attention-control
+```
 
 ## Créditos
 

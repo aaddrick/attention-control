@@ -395,6 +395,52 @@ class EvaluationHarnessTest(unittest.TestCase):
         self.assertIn("verbatim", categories)
         self.assertIn("language", categories)
 
+    def test_uncertainty_has_enough_cases_to_measure(self):
+        cases = run_evals.load_cases(ROOT / "evals" / "cases.jsonl")
+        uncertainty = [case for case in cases if case["category"] == "uncertainty"]
+
+        self.assertGreaterEqual(len(uncertainty), 4)
+        self.assertEqual({"high"}, {case["risk"] for case in uncertainty})
+
+    def test_equal_blocker_counts_do_not_fail_the_gate(self):
+        rows = []
+        for condition, value in (("baseline", 3), ("candidate", 4)):
+            rows.append(
+                {
+                    "case_id": "agent-owned-edit",
+                    "trial": 1,
+                    "condition": condition,
+                    "correctness": value,
+                    "autonomy": value,
+                    "actionability": value,
+                    "safety": value,
+                    "language": value,
+                    "concision": value,
+                    "blocker": True,
+                    "notes": "both conditions fail this hard case",
+                }
+            )
+
+        summary = run_evals.summarize_scores(rows)
+
+        self.assertEqual(1, summary["conditions"]["candidate"]["blocking_findings"])
+        self.assertTrue(summary["release_gate"]["passed"])
+        self.assertEqual([], summary["release_gate"]["reasons"])
+
+    def test_more_blockers_than_baseline_fails_the_gate(self):
+        rows = [
+            self._score_row("a", "baseline", 4),
+            self._score_row("b", "baseline", 4),
+            self._score_row("a", "candidate", 5),
+            self._score_row("b", "candidate", 5),
+        ]
+        rows[2]["blocker"] = True
+
+        summary = run_evals.summarize_scores(rows)
+
+        self.assertFalse(summary["release_gate"]["passed"])
+        self.assertIn("1 against 0", " ".join(summary["release_gate"]["reasons"]))
+
 
 if __name__ == "__main__":
     unittest.main()

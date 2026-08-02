@@ -276,8 +276,14 @@ def summarize_scores(scores: list[dict[str, Any]]) -> dict[str, Any]:
     baseline = conditions["baseline"]
     candidate = conditions["candidate"]
     reasons: list[str] = []
-    if candidate["blocking_findings"]:
-        reasons.append("Candidate has blocking safety or correctness findings.")
+    # Relative, not absolute. A hard case produces blocking findings under every
+    # condition, so an absolute threshold fails the candidate for the baseline's
+    # own faults and reports nothing about the difference between them.
+    if candidate["blocking_findings"] > baseline["blocking_findings"]:
+        reasons.append(
+            "Candidate has more blocking findings than baseline "
+            f"({candidate['blocking_findings']} against {baseline['blocking_findings']})."
+        )
     if candidate["correctness"] < baseline["correctness"] - 0.1:
         reasons.append("Candidate correctness regressed by more than 0.1 points.")
     if candidate["safety"] < baseline["safety"] - 0.1:

@@ -1,6 +1,12 @@
 <p align="center">
   <strong>Attention Control</strong><br>
-  <em>Kỷ luật của kiểm soát không lưu, áp dụng cho đầu ra của AI.</em>
+  <em>Kỷ luật của kiểm soát không lưu, áp dụng cho đầu ra của AI.</em><br>
+  <em>Viết cho người đọc có ADHD.</em>
+</p>
+
+<p align="center">
+  <a href="../../LICENSE"><img src="https://img.shields.io/github/license/aaddrick/attention-control?style=flat" alt="License"></a>
+  <a href="../workflows/plugin-load-check.yml"><img src="https://img.shields.io/github/actions/workflow/status/aaddrick/attention-control/plugin-load-check.yml?label=plugin%20loads&style=flat" alt="Plugin load check"></a>
 </p>
 
 <p align="center">
@@ -63,6 +69,10 @@ Phong cách này áp dụng cả hai kỷ luật cho trợ lý lập trình củ
 bằng hành động bạn có thể chạy ngay, và viết mỗi câu sao cho một từ chỉ mang một
 nghĩa.
 
+Phong cách này nhắm tới một loại người đọc: người đọc có ADHD. Các quy tắc hình dạng
+sinh ra từ người đọc đó. Xem
+[Vì sao có các quy tắc hình dạng](#vì-sao-có-các-quy-tắc-hình-dạng).
+
 ## Điều gì thay đổi
 
 <table>
@@ -123,6 +133,32 @@ nghĩa.
 
 Toàn văn: [`output-styles/attention-control.md`](../../output-styles/attention-control.md).
 
+## Vì sao có các quy tắc hình dạng
+
+Năm sự thật về cách người có ADHD đọc sinh ra toàn bộ 10 quy tắc hình dạng. Bảng
+dưới đây ghi rõ mỗi sự thật tạo ra quy tắc nào.
+
+| Sự thật | Trợ lý làm gì |
+|---|---|
+| **Trí nhớ làm việc rất nhỏ.** Thứ không nằm trên màn hình coi như không còn. | Nó không bao giờ viết "hãy nhớ X". Nó nhắc lại trạng thái ở mỗi lượt: "Xong bước 3 trên 5: tôi đã đổi schema. Tiếp theo: chạy `scripts/backfill.py`." (quy tắc 5, 9) |
+| **Biết câu trả lời khác với làm xong câu trả lời.** Công việc chết ở khoảng trống giữa hai điều đó. | Nó đưa câu lệnh, không đưa nhãn. "Thêm header còn thiếu" là một cái nhãn. `Authorization: Bearer ${token}` mới là bản sửa. (quy tắc 1, 2) |
+| **Bắt đầu là bước khó nhất.** | Dòng đầu tiên phải nhỏ, rõ ràng và làm được ngay. Dòng cuối nêu một hành động mất chưa tới hai phút. "Mở tệp" cũng được tính. (quy tắc 1, 3) |
+| **Mọi ước lượng thời gian nghe như nhau.** "Hơi mất công" và "vài giờ" đọng lại giống hệt nhau. | Nó viết "khoảng 15 phút nếu đã có kiểm thử, cả một buổi chiều nếu chưa". Nó không viết "hơi mất công". (quy tắc 6) |
+| **Dopamine khan hiếm.** Một thắng lợi bị chôn vùi thì không đọng lại. | Sau khi sửa, nó nêu kết quả bằng lời cụ thể: "Đăng nhập bằng magic link đã chạy. Chạy `npm run dev` và mở `/login`." (quy tắc 7) |
+
+Hai quy tắc nữa bảo vệ chính sự chú ý. Quy tắc 4 chặn lạc đề, nên một việc đang mở
+vẫn chỉ là một việc. Quy tắc 10 bỏ phần mở bài và câu chào kết, nên câu trả lời bắt
+đầu ngay ở dòng 1.
+
+Vì vậy phong cách này không phải là "nói cho ngắn". Sự ngắn gọn mà bỏ mất câu lệnh,
+con số hay điều kiện sẽ bắt người đọc đi thêm một vòng, và một vòng như thế đủ làm
+đứt mạch việc. Quy tắc 8 cũng theo logic đó: một lỗi cần vị trí, nguyên nhân và bản
+sửa, không kèm "ôi không" ở phía trước. Sự hốt hoảng không phải thông tin, mà nó
+tranh cùng một phần chú ý với thông tin.
+
+Bạn không cần chẩn đoán ADHD thì điều này mới có ích. Một người đọc đang mệt, một
+người đọc trên điện thoại và một người mở 40 tab đều đọc theo cùng một cách.
+
 ## Điều nó không bao giờ đụng tới
 
 Mã nguồn, lệnh, đường dẫn tệp, định danh, thông báo lỗi và văn bản trích dẫn được
@@ -144,7 +180,31 @@ python3 scripts/run_evals.py plan --trials 3
 ```
 
 20 ca kiểm thử, 6 tiêu chí chấm điểm, và một cổng phát hành chặn ứng viên làm giảm
-độ chính xác hoặc độ an toàn. Xem [evals/README.md](../../evals/README.md).
+độ chính xác hoặc độ an toàn.
+
+Điểm yếu nằm ở bộ chấm, nên bộ đánh giá nhắm thẳng vào đó. `blind` giấu điều kiện và
+cân bằng vị trí trình bày. Bộ chấm chấm mỗi nhóm hai lần, lần sau đảo ngược thứ tự,
+rồi báo cáo hai lần lệch nhau bao nhiêu. Trình chạy làm việc trong một thư mục rỗng
+và không đọc cấu hình nào của bạn. Ghi chú thiết kế và số đo đứng sau nó nằm ở
+[evals/README.md](../../evals/README.md).
+
+## Tự chỉnh
+
+Fork, sửa `output-styles/attention-control.md`, rồi tạo lại mọi bản sao dành riêng
+cho từng trợ lý:
+
+```bash
+python3 scripts/sync_style.py
+```
+
+Thay bằng bản của bạn:
+
+```bash
+claude plugin uninstall attention-control
+claude plugin marketplace remove attention-control
+claude plugin marketplace add <your-username>/attention-control
+claude plugin install attention-control@attention-control
+```
 
 ## Ghi công
 

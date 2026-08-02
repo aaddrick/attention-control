@@ -1,6 +1,12 @@
 <p align="center">
   <strong>Attention Control</strong><br>
-  <em>航空管制の規律を、AI の出力に。</em>
+  <em>航空管制の規律を、AI の出力に。</em><br>
+  <em>ADHD の読み手のために書かれています。</em>
+</p>
+
+<p align="center">
+  <a href="../../LICENSE"><img src="https://img.shields.io/github/license/aaddrick/attention-control?style=flat" alt="License"></a>
+  <a href="../workflows/plugin-load-check.yml"><img src="https://img.shields.io/github/actions/workflow/status/aaddrick/attention-control/plugin-load-check.yml?label=plugin%20loads&style=flat" alt="Plugin load check"></a>
 </p>
 
 <p align="center">
@@ -60,6 +66,10 @@ codex plugin add attention-control@attention-control
 
 このスタイルは同じ 2 つの規律をコーディングエージェントに適用します。エージェントは
 実行できるアクションを先に示し、1 語 1 義で各文を書きます。
+
+このスタイルが想定する読み手は 1 種類だけです。ADHD の読み手です。シェイプの
+ルールはその読み手から生まれました。[シェイプのルールが生まれた理由](#シェイプのルールが生まれた理由)
+を参照してください。
 
 ## 何が変わるか
 
@@ -122,6 +132,30 @@ codex plugin add attention-control@attention-control
 
 全文は [`output-styles/attention-control.md`](../../output-styles/attention-control.md) にあります。
 
+## シェイプのルールが生まれた理由
+
+ADHD の読み方に関する 5 つの事実が、10 のシェイプルールすべてを生みます。下の表は、
+各事実がどのルールを生むかを示します。
+
+| 事実 | エージェントの動き |
+|---|---|
+| **作業記憶が小さい。** 画面にないものは存在しないのと同じです。 | 「X を覚えておいてください」とは書きません。毎ターン状態を言い直します。「5 ステップ中 3 ステップ完了: スキーマを変更しました。次: `scripts/backfill.py` を実行します。」（ルール 5、9） |
+| **答えを知ることと、答えを実行することは別。** 作業はその隙間で止まります。 | ラベルではなくコマンドを渡します。「不足しているヘッダーを追加する」はラベルです。`Authorization: Bearer ${token}` が修正です。（ルール 1、2） |
+| **着手が最も難しい。** | 最初の行は小さく、明確で、今すぐ実行できます。最後の行は 2 分以内に終わるアクションを 1 つ示します。「ファイルを開く」でも構いません。（ルール 1、3） |
+| **時間の見積もりが同じに感じられる。** 「少し手間がかかる」と「数時間」は同じに響きます。 | 「テストがカバーしていれば 15 分ほど、していなければ半日」と書きます。「それなりの作業」とは書きません。（ルール 6） |
+| **ドーパミンが乏しい。** 埋もれた成果は届きません。 | 変更のあとで結果を具体的に示します。「マジックリンクでログインできます。`npm run dev` を実行して `/login` を開いてください。」（ルール 7） |
+
+さらに 2 つのルールが注意そのものを守ります。ルール 4 は脱線を抑え、開いた作業を
+1 本に保ちます。ルール 10 は前置きと締めの挨拶を削り、答えを 1 行目から始めます。
+
+だからこのスタイルは「短くする」ことではありません。コマンド、数値、条件を削る
+簡潔さは、読み手に往復を 1 回強います。その往復が作業の流れを切ります。ルール 8 も
+同じ理屈です。エラーには場所、原因、修正を書き、前に「おっと」は付けません。
+動揺は情報ではなく、同じ注意を情報と奪い合います。
+
+ADHD の診断は必要ありません。疲れた読み手、スマートフォンで読む人、タブを 40 個
+開いている人も、読み方は同じです。
+
 ## 決して触れないもの
 
 コード、コマンド、ファイルパス、識別子、エラーメッセージ、引用したテキストは
@@ -142,7 +176,29 @@ python3 scripts/run_evals.py plan --trials 3
 ```
 
 20 ケース、6 つの採点軸、そして正確性や安全性の後退を止めるリリースゲート。
-[evals/README.md](../../evals/README.md) を参照してください。
+
+弱点はジャッジなので、ハーネスはそこを狙います。`blind` は条件を隠し、提示位置を
+均等にします。ジャッジは各グループを 2 回採点し、2 回目は順序を逆にして、2 回の
+不一致率を報告します。ランナーは空のディレクトリで動き、あなたの設定を一切
+読みません。設計の意図と実測値は [evals/README.md](../../evals/README.md) にあります。
+
+## 自分で調整する
+
+フォークして `output-styles/attention-control.md` を編集し、エージェントごとの
+コピーを再生成します。
+
+```bash
+python3 scripts/sync_style.py
+```
+
+自分のコピーに入れ替えます。
+
+```bash
+claude plugin uninstall attention-control
+claude plugin marketplace remove attention-control
+claude plugin marketplace add <your-username>/attention-control
+claude plugin install attention-control@attention-control
+```
 
 ## クレジット
 

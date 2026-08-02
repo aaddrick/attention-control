@@ -1,6 +1,7 @@
 <p align="center">
   <strong>Attention Control</strong><br>
-  <em>Air traffic control discipline for agent output.</em>
+  <em>Air traffic control discipline for agent output.</em><br>
+  <em>Written for a reader with ADHD.</em>
 </p>
 
 <p align="center">
@@ -67,6 +68,9 @@ the instruction first and the background last.
 This style applies both disciplines to your coding agent. The agent leads with
 the action you can run, and writes each sentence so one word means one thing.
 
+The style targets one reader: a reader with ADHD. That reader is where the shape
+rules come from. See [Why the shape rules exist](#why-the-shape-rules-exist).
+
 ## What changes
 
 <table>
@@ -128,6 +132,32 @@ the action you can run, and writes each sentence so one word means one thing.
 - 20 words per instruction, 25 per explanation. Noun clusters capped at 3 words.
 
 Full text: [`output-styles/attention-control.md`](./output-styles/attention-control.md).
+
+## Why the shape rules exist
+
+Five facts about ADHD reading drive all 10 shape rules. Each fact below names
+the rules it produces.
+
+| The fact | What the agent does |
+|---|---|
+| **Working memory is small.** Anything not on screen is gone. | It never writes "keep in mind X". It restates the state every turn: "Step 3 of 5 done: I changed the schema. Next: run `scripts/backfill.py`." (rules 5, 9) |
+| **Knowing the answer is not doing the answer.** Work dies in the gap between the two. | It gives the command, not the label. "Add the missing header" is a label. `Authorization: Bearer ${token}` is a fix. (rules 1, 2) |
+| **Starting is the hardest step.** | The first line is small, obvious, and doable now. The last line names one action that takes under two minutes. "Open the file" counts. (rules 1, 3) |
+| **Time estimates feel uniform.** "A bit of work" and "a few hours" register the same. | It writes "about 15 minutes if tests cover this, an afternoon if not". It never writes "some work". (rule 6) |
+| **Dopamine is scarce.** A buried win does not register. | After a change, it names the result in concrete terms: "Login works with magic links. Run `npm run dev` and open `/login`." (rule 7) |
+
+Two more rules protect attention itself. Rule 4 suppresses tangents, so one open
+thread stays one open thread. Rule 10 removes the preamble and the closer, so
+the answer starts on line 1.
+
+This is why the style is not "be terse". Terseness that drops the command, the
+number, or the condition costs the reader a round trip, and a round trip costs
+the thread. Rule 8 follows from the same logic: an error gets a location, a
+cause, and a fix, with no "Uh oh" in front of it. Alarm is not information, and
+it competes with the information for the same attention.
+
+You need no ADHD diagnosis for this to help. A tired reader, a reader on a
+phone, and a reader with 40 open tabs all read the same way.
 
 ## What it never touches
 

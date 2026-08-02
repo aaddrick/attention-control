@@ -1,5 +1,4 @@
 .claude/settings.local.json
-evals/results/
 evals/runners.json
 __pycache__/
 *.pyc

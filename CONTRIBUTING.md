@@ -41,9 +41,10 @@ that swap your copy in.
 Two reasons.
 
 **Every file but one is generated.** `scripts/sync_style.py` writes the skill,
-the Cursor rule, `AGENTS.md`, and the INSTALL.md snippet from the canonical
-style file. A patch against a generated file cannot be merged. It fails CI, and
-the fix is to edit the canonical file instead.
+the Cursor skill, the Cursor rule, and the INSTALL.md snippet from the canonical
+style file, and `AGENTS.md` from `CLAUDE.md`. A patch against a generated file
+cannot be merged. It fails CI, and the fix is to edit the canonical file
+instead.
 
 **The rules are a personal reading model, not a standard.** The style targets
 one reader with ADHD. A rule that helps you may not belong here, and the fork
@@ -62,8 +63,13 @@ python3 scripts/check_configs.py
 ```
 
 ```bash
+python3 scripts/run_evals.py validate
+```
+
+```bash
 python3 -m unittest discover -s tests -v
 ```
 
-An eval change also needs `python3 scripts/run_evals.py validate` and a frozen
-run. See [evals/README.md](./evals/README.md).
+CI runs all four on every pull request, plus a fifth that rebuilds the ledger
+with `python3 scripts/ledger.py index`. An eval change also needs a frozen run.
+See [evals/README.md](./evals/README.md).

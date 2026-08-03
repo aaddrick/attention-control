@@ -227,7 +227,7 @@ python3 scripts/run_evals.py validate
 python3 scripts/run_evals.py plan --trials 3
 ```
 
-20 casos, 6 dimensões de pontuação e um portão de release que barra um candidato
+24 casos, 6 dimensões de pontuação e um portão de release que barra um candidato
 que regride em correção ou segurança.
 
 O juiz é o ponto fraco, então o harness mira nele. O `blind` esconde a condição e

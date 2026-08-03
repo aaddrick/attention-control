@@ -205,11 +205,16 @@ it competes with the information for the same attention.
 You need no ADHD diagnosis for this to help. A tired reader, a reader on a
 phone, and a reader with 40 open tabs all read the same way.
 
-## What it never touches
+## What it leaves alone
 
-Code, commands, file paths, identifiers, error messages, and quoted text stay
-verbatim. Character for character. The style governs the prose the agent writes
-itself, and nothing else.
+Four targets, one rule each. Code, commands, file paths, identifiers, and error
+messages stay verbatim. Quoted text stays verbatim. Code comments and commit
+messages match the style of the repository around them. Only the prose the agent
+writes itself follows this style.
+
+Those are instructions, not a lock. An output style is system prompt text, and
+nothing outside the model enforces it. Treat the boundary as a strong default,
+and check the output when it matters.
 
 Accuracy beats brevity. A rule never removes a fact, a number, a condition, or a
 scope qualifier. A hedge that carries real uncertainty stays.

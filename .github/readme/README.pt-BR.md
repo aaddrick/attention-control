@@ -208,11 +208,17 @@ informação.
 Você não precisa de um diagnóstico de TDAH para isto ajudar. Um leitor cansado, um
 leitor no celular e um leitor com 40 abas abertas leem do mesmo jeito.
 
-## O que ele nunca toca
+## O que ele não toca
 
-Código, comandos, caminhos de arquivo, identificadores, mensagens de erro e texto
-citado permanecem literais, caractere por caractere. O estilo governa apenas a
-prosa que o próprio agente escreve.
+Quatro alvos, uma regra para cada um. Código, comandos, caminhos de arquivo,
+identificadores e mensagens de erro permanecem literais, caractere por caractere.
+Texto citado também permanece literal. Comentários de código e mensagens de
+commit seguem o estilo do repositório ao redor. Só a prosa que o próprio agente
+escreve segue este estilo.
+
+Isso são instruções, não uma trava. Um estilo de saída é texto de system prompt,
+e nada fora do modelo o obriga. Trate esse limite como um padrão forte e confira
+a saída quando isso importar.
 
 Precisão vence brevidade. Nenhuma regra remove um fato, um número, uma condição ou
 um qualificador de escopo para encurtar uma frase. Uma ressalva que carrega

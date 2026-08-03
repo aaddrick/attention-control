@@ -51,11 +51,20 @@ Bên trong Claude Code, hai bước đó là lệnh gạch chéo:
 Sau đó chạy `/config`, chọn **Output style**, rồi chọn **Attention Control**. Nó
 có hiệu lực sau `/clear` hoặc ở phiên làm việc kế tiếp.
 
-Muốn bỏ qua menu chọn, hãy thêm dòng này vào `~/.claude/settings.json`:
+Muốn bỏ qua menu chọn, hãy thêm `outputStyle` vào `~/.claude/settings.json`.
+Đây là khóa ở cấp cao nhất. Không đặt nó bên trong `env`, `permissions` hay
+khối nào khác:
 
 ```json
-{ "outputStyle": "Attention Control" }
+{
+  "model": "opus",
+  "env": { "EXAMPLE_VAR": "1" },
+  "outputStyle": "Attention Control"
+}
 ```
+
+`model` và `env` đại diện cho những khóa bạn có thể đã có. Giữ chúng lại và
+thêm dòng `outputStyle` bên cạnh.
 
 Muốn dùng cho một phiên thay vì mọi phiên, hãy gọi kỹ năng mà plugin cũng cung
 cấp:

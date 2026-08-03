@@ -51,11 +51,20 @@ Claude Code の中では、同じ 2 手順がスラッシュコマンドにな�
 次に `/config` を実行し、**Output style** から **Attention Control** を選びます。
 `/clear` または次のセッションから有効になります。
 
-メニューを使わずに設定するなら、`~/.claude/settings.json` に次を追加します。
+メニューを使わずに設定するなら、`~/.claude/settings.json` に `outputStyle` を
+追加します。これはトップレベルのキーです。`env` や `permissions` の中には
+入れません。
 
 ```json
-{ "outputStyle": "Attention Control" }
+{
+  "model": "opus",
+  "env": { "EXAMPLE_VAR": "1" },
+  "outputStyle": "Attention Control"
+}
 ```
+
+`model` と `env` は、すでに持っているキーの例です。それらはそのまま残し、
+`outputStyle` の行を横に追加します。
 
 毎セッションではなく 1 セッションだけ使うなら、プラグインが同梱するスキルを
 呼び出します。

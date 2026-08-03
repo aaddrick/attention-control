@@ -51,11 +51,19 @@ Inside Claude Code, the same two steps are slash commands:
 Then run `/config`, select **Output style**, and pick **Attention Control**. It
 takes effect after `/clear` or the next session.
 
-To skip the picker, add this to `~/.claude/settings.json`:
+To skip the picker, add `outputStyle` to `~/.claude/settings.json`. It is a
+top-level key. It does not go inside `env`, `permissions`, or any other block:
 
 ```json
-{ "outputStyle": "Attention Control" }
+{
+  "model": "opus",
+  "env": { "EXAMPLE_VAR": "1" },
+  "outputStyle": "Attention Control"
+}
 ```
+
+`model` and `env` stand in for keys you may already have. Keep them. Add the
+`outputStyle` line beside them.
 
 For one session instead of every session, use the skill the plugin also ships:
 

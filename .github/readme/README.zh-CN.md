@@ -50,11 +50,19 @@ claude plugin install attention-control@attention-control
 然后运行 `/config`，选择 **Output style**，再选 **Attention Control**。执行
 `/clear` 或开启新会话后生效。
 
-想跳过选择菜单，就把这一行加入 `~/.claude/settings.json`：
+想跳过选择菜单，就把 `outputStyle` 加入 `~/.claude/settings.json`。它是顶层键，
+不要放进 `env`、`permissions` 或其他块里：
 
 ```json
-{ "outputStyle": "Attention Control" }
+{
+  "model": "opus",
+  "env": { "EXAMPLE_VAR": "1" },
+  "outputStyle": "Attention Control"
+}
 ```
+
+`model` 和 `env` 代表你可能已经有的键。保留它们，把 `outputStyle` 这一行加在
+旁边。
 
 只想用一个会话，就调用插件同时提供的技能：
 

@@ -33,20 +33,6 @@ claude plugin marketplace add aaddrick/attention-control
 claude plugin install attention-control@attention-control
 ```
 
-在 Claude Code 内部，同样两步是斜杠命令：
-
-```
-/plugin marketplace add aaddrick/attention-control
-```
-
-```
-/plugin install attention-control@attention-control
-```
-
-```
-/reload-plugins
-```
-
 然后运行 `/config`，选择 **Output style**，再选 **Attention Control**。执行
 `/clear` 或开启新会话后生效。
 
@@ -141,13 +127,16 @@ Codex 会在插件技能名前加上插件名。说 “stop attention control”
 
 ### 之后
 
-> 运行 `npm install jsonwebtoken@latest`，然后编辑 `src/auth.ts:42`。
+> 运行 `npm install jsonwebtoken@latest`。
 >
-> 1. 打开 `src/auth.ts`
-> 2. 用下面的代码替换 `verifyToken`（第 42–58 行）
-> 3. 运行 `npm test -- auth.spec.ts`
+> 我改了 `src/auth.ts:47`。`verifyToken` 现在写明算法：
 >
-> 旧签名导致了这次失败。`jsonwebtoken` v9 移除了第 47 行使用的回调形式。
+> `jwt.verify(token, secret, { algorithms: ["HS256"] }, callback);`
+>
+> 运行 `npm test -- auth.spec.ts`。大约 10 秒。
+>
+> 旧的调用没有写明算法。`jsonwebtoken` v9 拒绝未签名的令牌，除非你传入
+> `algorithms: ["none"]`。
 >
 > 下一步：如果测试失败，把第一行报错贴过来。
 

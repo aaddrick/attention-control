@@ -6,6 +6,12 @@ directly as an output style. Every other agent needs the same rules in its own
 container: a skill, a rules file, or an agent-instruction file. Those copies are
 real files rather than symlinks, so Windows clones and GitHub ZIP downloads work.
 
+INSTALL.md carries a short form of the same rules for readers who paste them into
+an AGENTS.md file. That snippet is generated too, between the markers in the
+"always-on snippet" section. It takes its rules from the canonical file and its
+framing prose from this script, so a rule this script cannot find is an error
+rather than a silent omission.
+
     python3 scripts/sync_style.py            # write the copies
     python3 scripts/sync_style.py --check    # exit 1 when a copy has drifted
 """
@@ -13,7 +19,9 @@ real files rather than symlinks, so Windows clones and GitHub ZIP downloads work
 from __future__ import annotations
 
 import argparse
+import re
 import sys
+import textwrap
 from pathlib import Path
 
 
@@ -58,6 +66,38 @@ alwaysApply: true
 ---
 """
 
+SNIPPET_BEGIN = "<!-- BEGIN GENERATED SNIPPET: scripts/sync_style.py -->"
+SNIPPET_END = "<!-- END GENERATED SNIPPET -->"
+
+SNIPPET_HEADER = """Air traffic control phraseology exists because a distracted reader mishears an
+instruction. Apply the same two disciplines to every response."""
+
+# Each key names the start of a canonical bullet. A key that matches nothing
+# fails the run, so a reworded rule cannot drop out of the snippet unnoticed.
+LANGUAGE_KEYS = (
+    "One word, one meaning.",
+    "One action, one verb.",
+    "Use the active voice.",
+    "Use only simple tenses:",
+    "Do not use the perfect tenses.",
+    "Maximum 20 words per sentence",
+    "Maximum 25 words per sentence",
+    "Limit noun clusters to 3 words.",
+)
+
+UNCERTAINTY_KEYS = (
+    "A hedging adverb carries no information",
+    "Uncertainty is a fact about what you know.",
+    "Never invent a specific to fill the gap.",
+)
+
+ACCURACY_KEY = "Accuracy always wins over style."
+
+NUMBERED_RULE = re.compile(r"^(\d+)\. \*\*(.+?)\*\*\s*(.*)$")
+BULLET = re.compile(r"^\s*- (.*)$")
+BOLD_LABEL = re.compile(r"^\*\*(.+?)\*\*")
+QUOTED_VERB = re.compile(r'^\s+- "([^"]+)"')
+
 
 def split_frontmatter(text: str) -> tuple[str, str]:
     """Return (frontmatter, body). Frontmatter is empty when the file has none."""
@@ -92,6 +132,180 @@ TARGETS = {
 }
 
 
+def section(body: str, heading: str) -> list[str]:
+    """Return the lines under `## heading`, up to the next second-level heading."""
+    lines = body.split("\n")
+    start = None
+    for index, line in enumerate(lines):
+        if line.strip() == f"## {heading}":
+            start = index + 1
+            break
+    if start is None:
+        raise ValueError(f"{CANONICAL}: no '## {heading}' section")
+    end = len(lines)
+    for index in range(start, len(lines)):
+        if lines[index].startswith("## "):
+            end = index
+            break
+    return lines[start:end]
+
+
+def numbered_rules(lines: list[str], heading: str) -> list[tuple[str, str]]:
+    """Return (headword, rest) for each `N. **Headword.** rest` line, in order."""
+    found: list[tuple[int, str, str]] = []
+    for line in lines:
+        match = NUMBERED_RULE.match(line)
+        if match:
+            found.append((int(match.group(1)), match.group(2).strip(), match.group(3).strip()))
+    if not found:
+        raise ValueError(f"{CANONICAL}: '## {heading}' has no numbered bold rules")
+    numbers = [number for number, _, _ in found]
+    if numbers != list(range(1, len(found) + 1)):
+        raise ValueError(f"{CANONICAL}: '## {heading}' numbering is {numbers}, not 1..{len(found)}")
+    return [(headword, rest) for _, headword, rest in found]
+
+
+def bullets(lines: list[str]) -> list[str]:
+    return [match.group(1).strip() for line in lines if (match := BULLET.match(line))]
+
+
+def paragraphs(lines: list[str]) -> list[str]:
+    """Return the prose blocks of a section, one joined string each."""
+    blocks: list[str] = []
+    current: list[str] = []
+    for line in lines:
+        if not line.strip() or BULLET.match(line) or NUMBERED_RULE.match(line):
+            if current:
+                blocks.append(" ".join(current))
+                current = []
+            continue
+        current.append(line.strip())
+    if current:
+        blocks.append(" ".join(current))
+    return blocks
+
+
+def pick(items: list[str], keys: tuple[str, ...], label: str) -> list[str]:
+    """Return one item per key, in key order. A key that matches nothing is an error."""
+    chosen = []
+    for key in keys:
+        matches = [item for item in items if item.startswith(key)]
+        if not matches:
+            raise ValueError(f"{CANONICAL}: {label} has no rule starting with {key!r}")
+        chosen.append(matches[0])
+    return chosen
+
+
+def standard_verbs(lines: list[str]) -> str:
+    verbs = [match.group(1) for line in lines if (match := QUOTED_VERB.match(line))]
+    if not verbs:
+        raise ValueError(f"{CANONICAL}: '## Language rules' lists no standard verbs")
+    return ", ".join(verbs)
+
+
+def verbatim_targets(lines: list[str]) -> str:
+    labels = []
+    for item in bullets(lines):
+        if "verbatim" not in item:
+            continue
+        match = BOLD_LABEL.match(item)
+        if match:
+            label = match.group(1)
+            labels.append(label[0].lower() + label[1:])
+    if not labels:
+        raise ValueError(f"{CANONICAL}: '## Scope' names no verbatim targets")
+    return "; ".join(labels)
+
+
+def first_sentence(text: str) -> str:
+    head = text.split(". ")[0].rstrip()
+    return head if head.endswith(".") else f"{head}."
+
+
+def wrap(text: str, indent: str = "") -> str:
+    return textwrap.fill(text, width=79, subsequent_indent=indent, break_long_words=False)
+
+
+def build_snippet(body: str) -> str:
+    """Render the short form that INSTALL.md tells readers to paste."""
+    scope = section(body, "Scope")
+    shape = numbered_rules(section(body, "Shape rules"), "Shape rules")
+    language = section(body, "Language rules")
+    precedence = section(body, "Precedence")
+    exceptions = numbered_rules(
+        section(body, "When to break the rules"), "When to break the rules"
+    )
+
+    parts = [
+        wrap(
+            f"Paste this into whichever file your agent loads on every session. It "
+            f"is the short form: the {len(shape)} shape rules, the language rules "
+            f"that matter most, and the {len(exceptions)} exceptions."
+        ),
+        "",
+        SNIPPET_BEGIN,
+        "",
+        "```markdown",
+        "## Output style",
+        "",
+        SNIPPET_HEADER,
+        "",
+        "Shape:",
+        "",
+    ]
+    parts += [f"{number}. {headword}" for number, (headword, _) in enumerate(shape, 1)]
+    parts += ["", "Language:", ""]
+    parts += [
+        wrap(f"- {rule}", indent="  ")
+        for rule in pick(bullets(language), LANGUAGE_KEYS, "'## Language rules'")
+    ]
+    parts += [wrap(f"- Use these standard verbs: {standard_verbs(language)}.", indent="  ")]
+    parts += [
+        "",
+        wrap(f"Reproduce verbatim: {verbatim_targets(scope)}."),
+        "",
+        wrap(pick(paragraphs(scope), (ACCURACY_KEY,), "'## Scope'")[0]),
+        "",
+        "Uncertainty:",
+        "",
+    ]
+    parts += [
+        wrap(f"- {rule}", indent="  ")
+        for rule in pick(bullets(precedence), UNCERTAINTY_KEYS, "'## Precedence'")
+    ]
+    parts += ["", "Exceptions:", ""]
+    parts += [
+        wrap(f"{number}. **{headword}** {first_sentence(rest)}", indent="   ")
+        for number, (headword, rest) in enumerate(exceptions, 1)
+    ]
+    parts += ["```", "", SNIPPET_END]
+    return "\n".join(parts)
+
+
+SECTION_TARGETS = {
+    Path("INSTALL.md"): build_snippet,
+}
+
+
+def replace_section(text: str, rendered: str, target: Path) -> str:
+    """Return `text` with everything up to and including the end marker replaced.
+
+    The rendered block starts above SNIPPET_BEGIN, because the sentence that
+    counts the rules is generated too. The anchor is therefore the heading that
+    precedes it.
+    """
+    heading = "## The always-on snippet\n"
+    start = text.find(heading)
+    if start == -1:
+        raise ValueError(f"{target}: no '{heading.strip()}' heading to generate into")
+    end = text.find(SNIPPET_END, start)
+    if end == -1:
+        raise ValueError(f"{target}: no {SNIPPET_END} marker after the heading")
+    head = text[: start + len(heading)]
+    tail = text[end + len(SNIPPET_END) :]
+    return f"{head}\n{rendered}{tail}"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -117,6 +331,18 @@ def main(argv: list[str] | None = None) -> int:
         target.write_text(expected, encoding="utf-8")
         print(f"wrote {relative}")
 
+    for relative, section_builder in SECTION_TARGETS.items():
+        target = ROOT / relative
+        current = target.read_text(encoding="utf-8")
+        expected = replace_section(current, section_builder(body), target)
+        if current == expected:
+            continue
+        if args.check:
+            drifted.append(relative)
+            continue
+        target.write_text(expected, encoding="utf-8")
+        print(f"wrote {relative} (snippet section)")
+
     if drifted:
         for relative in drifted:
             print(f"ERROR: {relative} does not match the canonical style", file=sys.stderr)
@@ -124,7 +350,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     if args.check:
-        print(f"All {len(TARGETS)} copies match {CANONICAL.relative_to(ROOT)}.")
+        total = len(TARGETS) + len(SECTION_TARGETS)
+        print(f"All {total} copies match {CANONICAL.relative_to(ROOT)}.")
     return 0
 
 

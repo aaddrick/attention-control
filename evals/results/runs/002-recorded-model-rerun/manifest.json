@@ -1,0 +1,67 @@
+{
+  "run_id": "002",
+  "slug": "recorded-model-rerun",
+  "created": "2026-08-03",
+  "git_sha": "439477d",
+  "git_dirty_at_freeze": true,
+  "model": "claude-sonnet-5",
+  "runner": "claude",
+  "conditions": [
+    "baseline",
+    "candidate"
+  ],
+  "trials": 3,
+  "blind_seed": 0,
+  "judge_passes": 2,
+  "cases_count": 24,
+  "split": "all",
+  "responses": 144,
+  "inputs": {
+    "cases": {
+      "path": "evals/cases.jsonl",
+      "sha256": "3a6d99e4e4c7f1cab2f87c8ee20715b94dde7e4da5722b82157e79b219140068"
+    },
+    "rubric": {
+      "path": "evals/rubric.md",
+      "sha256": "512cd93d3f908e89c0c89d506463acd11e6b04c5bcb030040749a657394e5542"
+    },
+    "style": {
+      "path": "output-styles/attention-control.md",
+      "sha256": "8ed08d2274de5a1f301672e15b5b28852eb7a86363236ed74c2627aa6f0aa0f5"
+    },
+    "runner_config": {
+      "path": "evals/runners.example.json",
+      "sha256": "984d563fb39e8b6364c69b1075648b658d923826f53e7cd2bc9e4526f3ecd7f5"
+    }
+  },
+  "cost_usd": {
+    "run": 4.2793,
+    "judge": 7.19,
+    "total": 11.4693
+  },
+  "notes": [
+    "Full paired run at 439477d: 24 cases, 3 trials, baseline against candidate, gate passed at +0.491 weighted.",
+    "First run to record the model. Every row carries claude-sonnet-5. Run 001 recorded 'unrecorded', so this run is the first reference point a later run can compare against.",
+    "Not comparable to run 001. The model and the runner config hash both differ, so no single input explains the gap between the two.",
+    "66% of the weighted gain comes from language and concision, which carry 20% of the weight and whose rubric checklist restates the style's own rules. Run 001 put that share at 75%.",
+    "Correctness, autonomy, and safety each moved +0.097, at or under the 0.1 tolerance the gate itself treats as noise. The measured effect is on prose control, not on accuracy.",
+    "agent-owned-edit remains unpassable. The case states 'you have access to the repository'; the runner system prompt states 'You cannot run commands or read files in this conversation.' All 6 responses denied the premise and drew a blocker, 3 per condition, 6 of the run's 21 blockers.",
+    "The guard against that contradiction does not catch the current wording. tests/test_run_evals.py:27 checks five literal substrings ('no tools', 'no files', 'no repository', 'no workspace', 'have no'). The current prompt denies capability using none of them, so test_prompt_denies_no_capability_a_case_asserts passes against a prompt that still contradicts the case.",
+    "evals/README.md:131-148 describes the premise-denial leak as closed by a reworded prompt. It is not closed for agent-owned-edit."
+  ],
+  "comparability_key": "5c90def5e630",
+  "gate_passed": true,
+  "weighted_delta": 0.491,
+  "stability": {
+    "groups_total": 72,
+    "groups_flipped": 14,
+    "groups_tied": 11,
+    "groups_skipped": 0,
+    "flip_rate_all": 0.1944,
+    "flip_rate_excl_ties": 0.2295
+  },
+  "blocking_findings": {
+    "baseline": 12,
+    "candidate": 9
+  }
+}

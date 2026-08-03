@@ -23,9 +23,29 @@
 <details open>
 <summary><strong>Claude Code</strong></summary>
 
+Claude Code là tác nhân duy nhất có chỗ dành cho output style. Chạy hai lệnh này
+trong terminal:
+
 ```bash
 claude plugin marketplace add aaddrick/attention-control
+```
+
+```bash
 claude plugin install attention-control@attention-control
+```
+
+Bên trong Claude Code, hai bước đó là lệnh gạch chéo:
+
+```
+/plugin marketplace add aaddrick/attention-control
+```
+
+```
+/plugin install attention-control@attention-control
+```
+
+```
+/reload-plugins
 ```
 
 Sau đó chạy `/config`, chọn **Output style**, rồi chọn **Attention Control**. Nó
@@ -37,24 +57,52 @@ Muốn bỏ qua menu chọn, hãy thêm dòng này vào `~/.claude/settings.json
 { "outputStyle": "Attention Control" }
 ```
 
+Muốn dùng cho một phiên thay vì mọi phiên, hãy gọi kỹ năng mà plugin cũng cung
+cấp:
+
+```
+/attention-control:attention-control
+```
+
+Nói "stop attention control" để tắt.
+
 </details>
 
 <details>
 <summary><strong>Codex</strong></summary>
 
+Codex không có chỗ dành cho output style, nên bộ quy tắc này đến dưới dạng kỹ
+năng.
+
 ```bash
 codex plugin marketplace add aaddrick/attention-control --ref main
+```
+
+```bash
 codex plugin add attention-control@attention-control
 ```
 
-Sau đó gõ `$attention-control` để áp dụng phong cách này.
+Bên trong Codex, `/plugins` mở trình duyệt plugin.
+
+Bắt đầu một luồng mới, rồi gõ tên kỹ năng:
+
+```
+$attention-control:attention-control
+```
+
+Codex thêm tên plugin vào trước tên kỹ năng. Nói "stop attention control" để tắt.
+Muốn áp dụng ở mọi lượt, hãy đặt đoạn luôn bật trong
+[INSTALL.md](../../INSTALL.md#the-always-on-snippet) vào `~/.codex/AGENTS.md`.
 
 </details>
 
 <details>
-<summary><strong>Cursor, Gemini CLI và cài đặt thủ công</strong></summary>
+<summary><strong>Cursor, Gemini CLI, Copilot, Zed và cài đặt thủ công</strong></summary>
 
-Xem [INSTALL.md](../../INSTALL.md).
+Xem [INSTALL.md](../../INSTALL.md). Không tác nhân nào trong số đó có chỗ dành
+cho output style, nên bộ quy tắc đến dưới dạng kỹ năng, tệp quy tắc hoặc một khối
+`AGENTS.md`. Theo hướng kỹ năng, hãy gõ `/attention-control` và nói "stop
+attention control" để tắt.
 
 </details>
 
@@ -110,18 +158,19 @@ sinh ra từ người đọc đó. Xem
 
 ## Hai lớp
 
-**Hình dạng** quyết định nói gì và theo thứ tự nào. 10 quy tắc:
+**Hình dạng** quyết định nói gì và theo thứ tự nào. 11 quy tắc:
 
 1. Mở đầu bằng hành động kế tiếp.
-2. Đánh số công việc nhiều bước.
-3. Kết thúc bằng một hành động kế tiếp cụ thể.
-4. Chặn các nhánh lạc đề.
-5. Nhắc lại trạng thái ở mỗi lượt.
-6. Ước lượng thời gian bằng đơn vị cụ thể.
-7. Cho thấy điều gì giờ đã chạy được.
-8. Báo lỗi một cách thẳng thắn.
-9. Giới hạn danh sách ở 5 mục.
-10. Không mở bài, không tóm tắt lại, không câu chào kết.
+2. Tự làm xong phần việc của mình.
+3. Đánh số công việc nhiều bước.
+4. Kết thúc bằng một hành động kế tiếp cụ thể.
+5. Chặn các nhánh lạc đề.
+6. Nhắc lại trạng thái ở mỗi lượt.
+7. Ước lượng thời gian bằng đơn vị cụ thể.
+8. Cho thấy điều gì giờ đã chạy được.
+9. Báo lỗi một cách thẳng thắn.
+10. Giới hạn danh sách ở 5 mục.
+11. Không mở bài, không tóm tắt lại, không câu chào kết.
 
 **Ngôn ngữ** quyết định cách viết từng câu:
 
@@ -135,24 +184,24 @@ Toàn văn: [`output-styles/attention-control.md`](../../output-styles/attention
 
 ## Vì sao có các quy tắc hình dạng
 
-Năm sự thật về cách người có ADHD đọc sinh ra toàn bộ 10 quy tắc hình dạng. Bảng
+Năm sự thật về cách người có ADHD đọc sinh ra toàn bộ 11 quy tắc hình dạng. Bảng
 dưới đây ghi rõ mỗi sự thật tạo ra quy tắc nào.
 
 | Sự thật | Trợ lý làm gì |
 |---|---|
-| **Trí nhớ làm việc rất nhỏ.** Thứ không nằm trên màn hình coi như không còn. | Nó không bao giờ viết "hãy nhớ X". Nó nhắc lại trạng thái ở mỗi lượt: "Xong bước 3 trên 5: tôi đã đổi schema. Tiếp theo: chạy `scripts/backfill.py`." (quy tắc 5, 9) |
-| **Biết câu trả lời khác với làm xong câu trả lời.** Công việc chết ở khoảng trống giữa hai điều đó. | Nó đưa câu lệnh, không đưa nhãn. "Thêm header còn thiếu" là một cái nhãn. `Authorization: Bearer ${token}` mới là bản sửa. (quy tắc 1, 2) |
-| **Bắt đầu là bước khó nhất.** | Dòng đầu tiên phải nhỏ, rõ ràng và làm được ngay. Dòng cuối nêu một hành động mất chưa tới hai phút. "Mở tệp" cũng được tính. (quy tắc 1, 3) |
-| **Mọi ước lượng thời gian nghe như nhau.** "Hơi mất công" và "vài giờ" đọng lại giống hệt nhau. | Nó viết "khoảng 15 phút nếu đã có kiểm thử, cả một buổi chiều nếu chưa". Nó không viết "hơi mất công". (quy tắc 6) |
-| **Dopamine khan hiếm.** Một thắng lợi bị chôn vùi thì không đọng lại. | Sau khi sửa, nó nêu kết quả bằng lời cụ thể: "Đăng nhập bằng magic link đã chạy. Chạy `npm run dev` và mở `/login`." (quy tắc 7) |
+| **Trí nhớ làm việc rất nhỏ.** Thứ không nằm trên màn hình coi như không còn. | Nó không bao giờ viết "hãy nhớ X". Nó nhắc lại trạng thái ở mỗi lượt: "Xong bước 3 trên 5: tôi đã đổi schema. Tiếp theo: chạy `scripts/backfill.py`." (quy tắc 6, 10) |
+| **Biết câu trả lời khác với làm xong câu trả lời.** Công việc chết ở khoảng trống giữa hai điều đó. | Nó tự làm xong phần việc của mình thay vì đẩy lại cho người đọc. Nó đưa câu lệnh, không đưa nhãn. "Thêm header còn thiếu" là một cái nhãn. `Authorization: Bearer ${token}` mới là bản sửa. (quy tắc 1, 2, 3) |
+| **Bắt đầu là bước khó nhất.** | Dòng đầu tiên phải nhỏ, rõ ràng và làm được ngay. Dòng cuối nêu một hành động mất chưa tới hai phút. "Mở tệp" cũng được tính. (quy tắc 1, 4) |
+| **Mọi ước lượng thời gian nghe như nhau.** "Hơi mất công" và "vài giờ" đọng lại giống hệt nhau. | Nó viết "khoảng 15 phút nếu đã có kiểm thử, cả một buổi chiều nếu chưa". Nó không viết "hơi mất công". (quy tắc 7) |
+| **Dopamine khan hiếm.** Một thắng lợi bị chôn vùi thì không đọng lại. | Sau khi sửa, nó nêu kết quả bằng lời cụ thể: "Đăng nhập bằng magic link đã chạy. Chạy `npm run dev` và mở `/login`." (quy tắc 8) |
 
-Hai quy tắc nữa bảo vệ chính sự chú ý. Quy tắc 4 chặn lạc đề, nên một việc đang mở
-vẫn chỉ là một việc. Quy tắc 10 bỏ phần mở bài và câu chào kết, nên câu trả lời bắt
+Hai quy tắc nữa bảo vệ chính sự chú ý. Quy tắc 5 chặn lạc đề, nên một việc đang mở
+vẫn chỉ là một việc. Quy tắc 11 bỏ phần mở bài và câu chào kết, nên câu trả lời bắt
 đầu ngay ở dòng 1.
 
 Vì vậy phong cách này không phải là "nói cho ngắn". Sự ngắn gọn mà bỏ mất câu lệnh,
 con số hay điều kiện sẽ bắt người đọc đi thêm một vòng, và một vòng như thế đủ làm
-đứt mạch việc. Quy tắc 8 cũng theo logic đó: một lỗi cần vị trí, nguyên nhân và bản
+đứt mạch việc. Quy tắc 9 cũng theo logic đó: một lỗi cần vị trí, nguyên nhân và bản
 sửa, không kèm "ôi không" ở phía trước. Sự hốt hoảng không phải thông tin, mà nó
 tranh cùng một phần chú ý với thông tin.
 
@@ -176,6 +225,9 @@ không đo độ dài.
 
 ```bash
 python3 scripts/run_evals.py validate
+```
+
+```bash
 python3 scripts/run_evals.py plan --trials 3
 ```
 
@@ -197,12 +249,21 @@ cho từng trợ lý:
 python3 scripts/sync_style.py
 ```
 
-Thay bằng bản của bạn:
+Thay bằng bản của bạn, chạy từng lệnh một:
 
 ```bash
 claude plugin uninstall attention-control
+```
+
+```bash
 claude plugin marketplace remove attention-control
+```
+
+```bash
 claude plugin marketplace add <your-username>/attention-control
+```
+
+```bash
 claude plugin install attention-control@attention-control
 ```
 

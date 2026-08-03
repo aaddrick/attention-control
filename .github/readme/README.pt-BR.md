@@ -23,9 +23,29 @@
 <details open>
 <summary><strong>Claude Code</strong></summary>
 
+O Claude Code é o único agente com espaço nativo para output style. Rode estes
+dois comandos no terminal:
+
 ```bash
 claude plugin marketplace add aaddrick/attention-control
+```
+
+```bash
 claude plugin install attention-control@attention-control
+```
+
+Dentro do Claude Code, os mesmos dois passos são comandos de barra:
+
+```
+/plugin marketplace add aaddrick/attention-control
+```
+
+```
+/plugin install attention-control@attention-control
+```
+
+```
+/reload-plugins
 ```
 
 Depois rode `/config`, selecione **Output style** e escolha **Attention Control**.
@@ -37,24 +57,50 @@ Para pular o menu, adicione isto ao `~/.claude/settings.json`:
 { "outputStyle": "Attention Control" }
 ```
 
+Para uma sessão só, em vez de todas, use a skill que o plugin também traz:
+
+```
+/attention-control:attention-control
+```
+
+Diga "stop attention control" para desligar.
+
 </details>
 
 <details>
 <summary><strong>Codex</strong></summary>
 
+O Codex não tem espaço para output style, então as regras vêm como skill.
+
 ```bash
 codex plugin marketplace add aaddrick/attention-control --ref main
+```
+
+```bash
 codex plugin add attention-control@attention-control
 ```
 
-Depois digite `$attention-control` para aplicar o estilo.
+Dentro do Codex, `/plugins` abre o navegador de plugins.
+
+Comece uma thread nova e digite a skill:
+
+```
+$attention-control:attention-control
+```
+
+O Codex coloca o nome do plugin antes do nome da skill. Diga "stop attention
+control" para desligar. Para valer em todo turno, coloque o trecho sempre ativo
+do [INSTALL.md](../../INSTALL.md#the-always-on-snippet) no `~/.codex/AGENTS.md`.
 
 </details>
 
 <details>
-<summary><strong>Cursor, Gemini CLI e instalação manual</strong></summary>
+<summary><strong>Cursor, Gemini CLI, Copilot, Zed e instalação manual</strong></summary>
 
-Veja [INSTALL.md](../../INSTALL.md).
+Veja [INSTALL.md](../../INSTALL.md). Nenhum deles tem espaço para output style,
+então as regras vêm como skill, arquivo de regras ou um bloco de `AGENTS.md`. No
+caminho da skill, digite `/attention-control` e diga "stop attention control"
+para desligar.
 
 </details>
 
@@ -110,18 +156,19 @@ forma. Veja [Por que as regras de forma existem](#por-que-as-regras-de-forma-exi
 
 ## As duas camadas
 
-**Forma** decide o que você diz e em que ordem. 10 regras:
+**Forma** decide o que você diz e em que ordem. 11 regras:
 
 1. Comece pela próxima ação.
-2. Numere o trabalho de várias etapas.
-3. Termine com uma próxima ação concreta.
-4. Suprima tangentes.
-5. Repita o estado a cada turno.
-6. Dê estimativas de tempo em unidades concretas.
-7. Mostre o que agora funciona.
-8. Relate erros de forma seca.
-9. Limite listas a 5 itens.
-10. Sem preâmbulo, sem recapitulação, sem fecho.
+2. Faça o trabalho que é seu.
+3. Numere o trabalho de várias etapas.
+4. Termine com uma próxima ação concreta.
+5. Suprima tangentes.
+6. Repita o estado a cada turno.
+7. Dê estimativas de tempo em unidades concretas.
+8. Mostre o que agora funciona.
+9. Relate erros de forma seca.
+10. Limite listas a 5 itens.
+11. Sem preâmbulo, sem recapitulação, sem fecho.
 
 **Linguagem** decide como cada frase é escrita:
 
@@ -136,24 +183,24 @@ Texto completo: [`output-styles/attention-control.md`](../../output-styles/atten
 
 ## Por que as regras de forma existem
 
-Cinco fatos sobre a leitura com TDAH geram as 10 regras de forma. Cada fato abaixo
+Cinco fatos sobre a leitura com TDAH geram as 11 regras de forma. Cada fato abaixo
 nomeia as regras que produz.
 
 | O fato | O que o agente faz |
 |---|---|
-| **A memória de trabalho é pequena.** O que não está na tela sumiu. | Ele nunca escreve "tenha em mente X". Ele repete o estado a cada turno: "Etapa 3 de 5 pronta: mudei o schema. Próximo: rode `scripts/backfill.py`." (regras 5, 9) |
-| **Saber a resposta não é executar a resposta.** O trabalho morre na lacuna entre as duas coisas. | Ele dá o comando, não o rótulo. "Adicione o cabeçalho que falta" é um rótulo. `Authorization: Bearer ${token}` é a correção. (regras 1, 2) |
-| **Começar é a etapa mais difícil.** | A primeira linha é pequena, óbvia e possível agora. A última linha nomeia uma ação de menos de dois minutos. "Abra o arquivo" vale. (regras 1, 3) |
-| **As estimativas de tempo soam todas iguais.** "Um pouco de trabalho" e "algumas horas" registram do mesmo jeito. | Ele escreve "uns 15 minutos se houver teste cobrindo isso, uma tarde se não houver". Ele nunca escreve "um pouco de trabalho". (regra 6) |
-| **A dopamina é escassa.** Uma vitória enterrada não registra. | Depois de uma mudança, ele nomeia o resultado em termos concretos: "O login por magic link funciona. Rode `npm run dev` e abra `/login`." (regra 7) |
+| **A memória de trabalho é pequena.** O que não está na tela sumiu. | Ele nunca escreve "tenha em mente X". Ele repete o estado a cada turno: "Etapa 3 de 5 pronta: mudei o schema. Próximo: rode `scripts/backfill.py`." (regras 6, 10) |
+| **Saber a resposta não é executar a resposta.** O trabalho morre na lacuna entre as duas coisas. | Ele faz o trabalho que é seu em vez de devolvê-lo ao leitor. Ele dá o comando, não o rótulo. "Adicione o cabeçalho que falta" é um rótulo. `Authorization: Bearer ${token}` é a correção. (regras 1, 2, 3) |
+| **Começar é a etapa mais difícil.** | A primeira linha é pequena, óbvia e possível agora. A última linha nomeia uma ação de menos de dois minutos. "Abra o arquivo" vale. (regras 1, 4) |
+| **As estimativas de tempo soam todas iguais.** "Um pouco de trabalho" e "algumas horas" registram do mesmo jeito. | Ele escreve "uns 15 minutos se houver teste cobrindo isso, uma tarde se não houver". Ele nunca escreve "um pouco de trabalho". (regra 7) |
+| **A dopamina é escassa.** Uma vitória enterrada não registra. | Depois de uma mudança, ele nomeia o resultado em termos concretos: "O login por magic link funciona. Rode `npm run dev` e abra `/login`." (regra 8) |
 
-Outras duas regras protegem a própria atenção. A regra 4 suprime tangentes, então
-uma frente aberta continua sendo uma só. A regra 10 remove o preâmbulo e o fecho,
+Outras duas regras protegem a própria atenção. A regra 5 suprime tangentes, então
+uma frente aberta continua sendo uma só. A regra 11 remove o preâmbulo e o fecho,
 então a resposta começa na linha 1.
 
 Por isso o estilo não é "seja breve". A brevidade que descarta o comando, o número
 ou a condição custa uma ida e volta ao leitor, e essa ida e volta custa o fio da
-tarefa. A regra 8 vem da mesma lógica: um erro recebe local, causa e correção, sem
+tarefa. A regra 9 vem da mesma lógica: um erro recebe local, causa e correção, sem
 um "opa" na frente. Alarme não é informação, e disputa a mesma atenção que a
 informação.
 
@@ -177,6 +224,9 @@ mede tamanho.
 
 ```bash
 python3 scripts/run_evals.py validate
+```
+
+```bash
 python3 scripts/run_evals.py plan --trials 3
 ```
 
@@ -198,12 +248,21 @@ específica de agente:
 python3 scripts/sync_style.py
 ```
 
-Troque pela sua cópia:
+Troque pela sua cópia, um comando por vez:
 
 ```bash
 claude plugin uninstall attention-control
+```
+
+```bash
 claude plugin marketplace remove attention-control
+```
+
+```bash
 claude plugin marketplace add <your-username>/attention-control
+```
+
+```bash
 claude plugin install attention-control@attention-control
 ```
 

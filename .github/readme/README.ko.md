@@ -10,6 +10,10 @@
 </p>
 
 <p align="center">
+  <a href="https://www.linkedin.com/in/aaddrick/">LinkedIn에서 연결해요!</a>
+</p>
+
+<p align="center">
   <a href="../../README.md">English</a> ·
   <a href="README.zh-CN.md">简体中文</a> ·
   <a href="README.ja.md">日本語</a> ·

@@ -1,5 +1,6 @@
 import argparse
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -16,15 +17,43 @@ import run_evals  # noqa: E402
 class IsolationPromptTest(unittest.TestCase):
     """The isolation prompt must not contradict a premise a case states.
 
-    An early version told the runner "You have no tools, no files, no
-    repository, and no workspace." The `agent-owned-edit` case tells it "you
-    have access to the repository." Every response denied the premise, scored
-    1.0 on autonomy under both conditions, and drew a blocking finding. The
-    prompt that protected the run from the environment contaminated the run
-    instead.
+    Two wordings contaminated a run. Run 001 told the runner "You have no
+    tools, no files, no repository, and no workspace." Run 002 told it "You
+    cannot run commands or read files in this conversation." The
+    `agent-owned-edit` case tells it "you have access to the repository."
+    Under both wordings every response denied the premise, scored 1.0 on
+    autonomy under both conditions, and drew a blocking finding. In run 002
+    that case burned 6 of the run's 21 blockers.
+
+    The first guard listed five literal substrings. The second wording used
+    none of them, so it passed the guard and reached a $11.47 run. A literal
+    list only catches the sentence somebody already wrote.
+
+    The guard now matches a negation joined to a capability noun inside one
+    sentence, so a reworded denial fails too. `CONTAMINATED_WORDINGS` holds
+    every wording known to have cost a run, and a test asserts the guard
+    catches each one.
     """
 
-    DENIALS = ("no tools", "no files", "no repository", "no workspace", "have no")
+    NEGATION = (
+        r"(?:cannot|can ?not|can't|could ?not|couldn't|unable to|not able to|"
+        r"do(?:es)? ?not have|don't have|doesn't have|have no|has no|without|"
+        r"lack(?:s|ing)?|\bno\b)"
+    )
+    CAPABILITY = (
+        r"(?:tools?|files?|repositor(?:y|ies)|repo|workspace|commands?|shell|"
+        r"file ?system|access)"
+    )
+    DENIAL = re.compile(NEGATION + r"[^.]{0,48}?" + CAPABILITY)
+
+    CONTAMINATED_WORDINGS = (
+        "You have no tools, no files, no repository, and no workspace.",
+        "You cannot run commands or read files in this conversation.",
+        "You are unable to access the repository.",
+        "You do not have access to files.",
+        "You are working without a workspace.",
+        "There is no repository in this conversation.",
+    )
 
     def _system_prompt(self):
         config = json.loads((ROOT / "evals" / "runners.example.json").read_text(encoding="utf-8"))
@@ -32,10 +61,30 @@ class IsolationPromptTest(unittest.TestCase):
         return command[command.index("--system-prompt") + 1]
 
     def test_prompt_denies_no_capability_a_case_asserts(self):
-        prompt = self._system_prompt().lower()
-        found = [phrase for phrase in self.DENIALS if phrase in prompt]
+        found = self.DENIAL.search(self._system_prompt().lower())
 
-        self.assertEqual([], found, f"the isolation prompt denies a stated premise: {found}")
+        self.assertIsNone(
+            found,
+            "the isolation prompt denies a stated premise: "
+            f"{found.group(0) if found else ''!r}",
+        )
+
+    def test_the_guard_catches_every_wording_that_cost_a_run(self):
+        """A literal list missed the second wording. Prove the pattern does not."""
+        for wording in self.CONTAMINATED_WORDINGS:
+            with self.subTest(wording=wording):
+                self.assertIsNotNone(
+                    self.DENIAL.search(wording.lower()),
+                    f"the guard misses a denial that contaminated a run: {wording!r}",
+                )
+
+    def test_the_case_that_exposed_this_still_asserts_a_capability(self):
+        """The guard is worth nothing if the case stops granting the capability."""
+        lines = (ROOT / "evals" / "cases.jsonl").read_text(encoding="utf-8").splitlines()
+        cases = [json.loads(line) for line in lines if line.strip()]
+        case = next(case for case in cases if case["id"] == "agent-owned-edit")
+
+        self.assertIn("you have access to the repository", case["prompt"].lower())
 
     def test_prompt_still_forbids_inspecting_the_environment(self):
         prompt = self._system_prompt().lower()

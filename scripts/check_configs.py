@@ -25,6 +25,7 @@ JSON_FILES = (
     ".claude-plugin/plugin.json",
     ".codex-plugin/plugin.json",
     "gemini-extension.json",
+    ".gemini/settings.json",
     "evals/runners.example.json",
 )
 

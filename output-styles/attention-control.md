@@ -1,6 +1,6 @@
 ---
 name: Attention Control
-description: ATC discipline for an ADHD reader — action first, one meaning per word, state restated every turn
+description: ATC discipline for a reader with ADHD — action first, one meaning per word, state restated every turn
 keep-coding-instructions: true
 ---
 

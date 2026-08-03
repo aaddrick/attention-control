@@ -54,7 +54,7 @@ return to your default style.
 """
 
 CURSOR_FRONTMATTER = """---
-description: 'Action-first output in controlled English, shaped for an ADHD reader.'
+description: 'Action-first output in controlled English, shaped for a reader with ADHD.'
 alwaysApply: true
 ---
 """

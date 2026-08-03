@@ -51,11 +51,19 @@ Claude Code 안에서는 같은 두 단계가 슬래시 명령입니다.
 그다음 `/config`를 실행하고 **Output style**에서 **Attention Control**을 선택하세요.
 `/clear` 또는 다음 세션부터 적용됩니다.
 
-메뉴를 건너뛰려면 `~/.claude/settings.json`에 다음을 추가하세요.
+메뉴를 건너뛰려면 `~/.claude/settings.json`에 `outputStyle`을 추가하세요. 최상위
+키입니다. `env`나 `permissions` 안에 넣지 않습니다.
 
 ```json
-{ "outputStyle": "Attention Control" }
+{
+  "model": "opus",
+  "env": { "EXAMPLE_VAR": "1" },
+  "outputStyle": "Attention Control"
+}
 ```
+
+`model`과 `env`는 이미 가지고 있을 만한 키의 예입니다. 그대로 두고
+`outputStyle` 줄을 그 옆에 추가하세요.
 
 모든 세션이 아니라 한 세션만 적용하려면 플러그인이 함께 제공하는 스킬을
 사용하세요.

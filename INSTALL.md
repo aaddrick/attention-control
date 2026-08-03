@@ -54,12 +54,32 @@ effect after `/clear` or the next session. Claude Code writes your choice to
 
 ### Select the style without the picker
 
+`outputStyle` is a top-level key in the settings file. It sits beside `model`,
+`env`, and `permissions`. It never goes inside them:
+
 ```json
-{ "outputStyle": "Attention Control" }
+{
+  "model": "opus",
+  "env": { "EXAMPLE_VAR": "1" },
+  "outputStyle": "Attention Control"
+}
 ```
 
-Put that in `~/.claude/settings.json` for every project, or in
-`.claude/settings.json` for one project.
+`model` and `env` stand in for keys you may already have. Keep them. Add the
+`outputStyle` line beside them.
+
+Pick the file by scope:
+
+1. `~/.claude/settings.json` applies to every project.
+2. `.claude/settings.json` applies to one project, shared with collaborators.
+3. `.claude/settings.local.json` applies to one project, for you alone.
+
+The most local file wins. `.claude/settings.local.json` beats
+`.claude/settings.json`, which beats `~/.claude/settings.json`.
+
+`/config` writes your pick to `.claude/settings.local.json`, so a style you
+once picked in a project keeps overriding your user file. Remove the
+`outputStyle` key from that local file when the user-level value must apply.
 
 ### Install without the plugin
 

@@ -51,11 +51,20 @@ Dentro do Claude Code, os mesmos dois passos são comandos de barra:
 Depois rode `/config`, selecione **Output style** e escolha **Attention Control**.
 Ele passa a valer depois de `/clear` ou na próxima sessão.
 
-Para pular o menu, adicione isto ao `~/.claude/settings.json`:
+Para pular o menu, adicione `outputStyle` ao `~/.claude/settings.json`. É uma
+chave de nível superior. Ela não vai dentro de `env`, `permissions` nem de
+qualquer outro bloco:
 
 ```json
-{ "outputStyle": "Attention Control" }
+{
+  "model": "opus",
+  "env": { "EXAMPLE_VAR": "1" },
+  "outputStyle": "Attention Control"
+}
 ```
+
+`model` e `env` representam chaves que você talvez já tenha. Mantenha-as e
+adicione a linha `outputStyle` ao lado.
 
 Para uma sessão só, em vez de todas, use a skill que o plugin também traz:
 

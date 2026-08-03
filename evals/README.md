@@ -103,9 +103,10 @@ with it. Record the pinned model with any published numbers.
 reads its working directory. A run that starts from this repo answers questions
 about `run_evals.py` and `cases.jsonl` instead of about the task.
 
-A real run gives the number: **24 of 120 responses** named files in this
+An early run gives the number: **24 of 120 responses** named files in this
 repository. The damage split 17 baseline against 7 candidate, so the two
-conditions did not face the same task.
+conditions did not face the same task. That run predates the ledger and the
+24-case catalog: 120 responses is 20 cases, 3 trials, 2 conditions.
 
 ### No workspace
 
@@ -113,17 +114,20 @@ The claude runner passes `--system-prompt` to replace Claude Code's
 coding-agent system prompt:
 
 ```
-You are a helpful assistant. Answer the message directly and completely. You
-cannot run commands or read files in this conversation. Accept the premises the
-message states and answer from the message alone. Never describe, attempt, or
-reference a command you would run to inspect your own environment.
+You are a helpful assistant. Answer the message directly and completely. Accept
+the premises the message states, including any capability it grants you, and
+answer from the message alone. Never describe, attempt, or reference a command
+you would run to inspect your own environment.
 ```
 
-Without it, the agent tries to look around a workspace that does not exist. A
-real run gives the number: **16 of 120 responses**, split 10 baseline against 6
-candidate. One `complex-plan` baseline response was 238 characters and contained
-no plan. It held only an attempt to list a temp directory. The same case under
-the replaced prompt returned 7,196 characters and a phased plan.
+Copy that text from `evals/runners.example.json`, not from this file. A prompt
+that drifts from the shipped config costs a run.
+
+Without it, the agent tries to look around a workspace that does not exist. The
+same early run gives the number: **16 of 120 responses**, split 10 baseline
+against 6 candidate. One `complex-plan` baseline response was 238 characters
+and contained no plan. It held only an attempt to list a temp directory. The
+same case under the replaced prompt returned 7,196 characters and a phased plan.
 
 This choice sets the scope of any result the harness produces. It measures the
 style's effect on **prose**, not on agentic behaviour.
@@ -131,18 +135,21 @@ style's effect on **prose**, not on agentic behaviour.
 ### No premise denial
 
 The prompt above forbids inspecting the environment. It does not deny facts a
-case states. That distinction cost a full run to find.
+case states. Two wordings broke that distinction, and each cost a full run.
 
-An earlier wording read "You have no tools, no files, no repository, and no
-workspace." The `agent-owned-edit` case opens with "you have access to the
-repository." Every response denied the premise. All 6 scored **1.0 on
-autonomy** under both conditions, and all 6 drew a blocking finding. The case
-produced a weighted delta of exactly 0.000 while consuming 6 of the run's 16
-blockers. `real-ambiguity` drew 2 more baseline blockers from the same cause.
+Run 001 read "You have no tools, no files, no repository, and no workspace."
+Run 002 read "You cannot run commands or read files in this conversation." The
+`agent-owned-edit` case opens with "you have access to the repository." Under
+both wordings every response denied the premise. All 6 scored **1.0 on
+autonomy** under both conditions, and all 6 drew a blocking finding. In run 001
+the case produced a weighted delta of exactly 0.000 while consuming 6 of that
+run's 16 blockers. `real-ambiguity` drew 2 more baseline blockers from the same
+cause. In run 002 the case took 6 of 21 blockers.
 
 The prompt that protected the run from the environment contaminated the run
-instead. A test now asserts the prompt contains no capability denial, and still
-forbids environment inspection.
+instead. `tests/test_run_evals.py` now matches a negation joined to a capability
+noun, so a reworded denial fails the guard too. The first guard listed five
+literal substrings, and the second bad wording used none of them.
 
 Read this as a general rule for any isolation you add. Isolation that
 contradicts the task measures the isolation.
@@ -170,9 +177,9 @@ judge learns nothing about which is which:
 The blinded file drops `condition`, `runner`, `usage`, and `cost_usd`. Only the
 key file links a `blind_id` back to its condition.
 
-The order is a rotation by group index, not a shuffle. Over 20 cases and 3
-trials, each condition holds each position exactly 30 times out of 60. `--seed`
-shifts the rotation and keeps that balance.
+The order is a rotation by group index, not a shuffle. Over 24 cases and 3
+trials, the run holds 72 groups, and each condition holds each position exactly
+36 times out of 72. `--seed` shifts the rotation and keeps that balance.
 
 The command refuses to overwrite an existing output or key. Pass `--force` to
 allow it. An overwrite of the key destroys the only link between a score and its
@@ -248,9 +255,9 @@ conditions produced with different cases, models, trial counts, or rubrics.
 
 ```bash
 python3 scripts/ledger.py freeze \
-  --run-id 002 --slug fixed-isolation-prompt --date 2026-08-03 \
-  --judge-cost 7.98 \
-  --note "Reworded the isolation prompt so it denies no stated premise."
+  --run-id 003 --slug what-this-run-changed --date 2026-08-04 \
+  --judge-cost 7.19 \
+  --note "One finding per note. Write it against the run that produced it."
 
 python3 scripts/ledger.py index
 ```
@@ -299,7 +306,7 @@ Four choices answer those numbers:
 
 1. **Blinding.** The judge never sees which style produced a response.
 2. **Balanced positions.** Rotation puts each condition in each position exactly
-   30 times out of 60. A shuffle balances only in expectation.
+   36 times out of 72. A shuffle balances only in expectation.
 3. **Two passes, orders reversed.** The judge scores every group twice, swaps the
    order between passes, then averages the two. It records both passes, so you
    measure the disagreement instead of a guess at it.
@@ -319,7 +326,7 @@ gate that can send work backward. This judge scores once and stops.
 
 ## Attribution
 
-The harness, the rubric, and 14 of the 20 cases derive from
+The harness, the rubric, and 14 of the 24 cases derive from
 [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) (MIT). The `language`
-dimension, its checklist, the six `verbatim` / `language` / `decision` /
+dimension, its checklist, the ten `verbatim` / `language` / `decision` /
 `uncertainty` cases, the `blind` command, and `judge.py` are new here.

@@ -88,7 +88,7 @@ Six READMEs carry the same content: `README.md` and five translations under
 
 ## Gates
 
-Run these before you push. CI runs the same four.
+Run these four before you push. CI runs the same four.
 
 ```bash
 python3 scripts/sync_style.py --check
@@ -104,6 +104,13 @@ python3 scripts/run_evals.py validate
 
 ```bash
 python3 -m unittest discover -s tests -v
+```
+
+CI runs a fifth gate you cannot skip: it rebuilds the ledger and fails when the
+result differs from the committed file. Run it after any freeze.
+
+```bash
+python3 scripts/ledger.py index
 ```
 
 Python 3.11 is the floor. CI runs the tests on 3.11 and 3.14.

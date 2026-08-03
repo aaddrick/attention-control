@@ -7,18 +7,22 @@ project. This file credits both.
 
 **[ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd)** by Ayoub G. — MIT.
 
-The shape layer (rules 1 to 10) adapts that project's ruleset. The evaluation
-harness (`scripts/run_evals.py`, `evals/rubric.md`, and 14 of the cases in
+The shape layer (rules 1 to 11) adapts that project's ruleset. The evaluation
+harness (`scripts/run_evals.py`, `evals/rubric.md`, and 14 of the 24 cases in
 `evals/cases.jsonl`) derives from the same project. The MIT license text and
 both copyright lines are in [LICENSE](./LICENSE).
 
 Changes from that project:
 
-1. The style ships as a Claude Code **output style**, not a skill. It applies to
-   every turn without an invocation.
-2. A second layer controls sentence-level language, not response shape.
-3. The rubric adds a `language` dimension and reweights the others.
-4. Six cases test the language layer and verbatim preservation.
+1. Shape rule 2, "Do the work you own", is new here. The other ten shape rules
+   adapt that project's ruleset.
+2. The style ships as a Claude Code **output style**, so it applies to every
+   turn without an invocation. Six other harnesses have no output style slot,
+   so the same rules also ship as a skill.
+3. A second layer controls sentence-level language, not response shape.
+4. The rubric adds a `language` dimension and reweights the others.
+5. Ten cases are new here: two `language`, two `verbatim`, one `decision`, and
+   five `uncertainty`.
 
 ## Language layer
 

@@ -223,7 +223,7 @@ python3 scripts/run_evals.py validate
 python3 scripts/run_evals.py plan --trials 3
 ```
 
-20 cases, 6 scored dimensions, and a release gate that blocks a candidate that
+24 cases, 6 scored dimensions, and a release gate that blocks a candidate that
 regresses correctness or safety.
 
 The judge is the weak point, so the harness targets it. `blind` hides the

@@ -229,7 +229,7 @@ python3 scripts/run_evals.py validate
 python3 scripts/run_evals.py plan --trials 3
 ```
 
-20 ca kiểm thử, 6 tiêu chí chấm điểm, và một cổng phát hành chặn ứng viên làm giảm
+24 ca kiểm thử, 6 tiêu chí chấm điểm, và một cổng phát hành chặn ứng viên làm giảm
 độ chính xác hoặc độ an toàn.
 
 Điểm yếu nằm ở bộ chấm, nên bộ đánh giá nhắm thẳng vào đó. `blind` giấu điều kiện và

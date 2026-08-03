@@ -31,6 +31,62 @@ class SyncStyleTest(unittest.TestCase):
                 text = (ROOT / relative).read_text(encoding="utf-8")
                 self.assertIn(sync_style.GENERATED_BY, text)
 
+    def test_snippet_carries_every_shape_rule_in_canonical_order(self):
+        body = self._canonical_body()
+        rules = sync_style.numbered_rules(
+            sync_style.section(body, "Shape rules"), "Shape rules"
+        )
+
+        snippet = sync_style.build_snippet(body)
+
+        for number, (headword, _) in enumerate(rules, 1):
+            self.assertIn(f"{number}. {headword}", snippet)
+
+    def test_snippet_carries_every_exception(self):
+        body = self._canonical_body()
+        exceptions = sync_style.numbered_rules(
+            sync_style.section(body, "When to break the rules"), "When to break the rules"
+        )
+
+        snippet = sync_style.build_snippet(body)
+
+        for headword, _ in exceptions:
+            self.assertIn(f"**{headword}**", snippet)
+
+    def test_snippet_keeps_the_rule_against_inventing_a_specific(self):
+        snippet = sync_style.build_snippet(self._canonical_body())
+
+        self.assertIn("Never invent a specific to fill the gap.", snippet)
+
+    def test_a_reworded_rule_fails_the_run_instead_of_dropping_out(self):
+        body = self._canonical_body().replace(
+            "- Limit noun clusters to 3 words.", "- Keep noun clusters to 3 words."
+        )
+
+        with self.assertRaisesRegex(ValueError, "Limit noun clusters"):
+            sync_style.build_snippet(body)
+
+    def test_renumbered_shape_rules_fail_the_run(self):
+        body = self._canonical_body().replace(
+            "2. **Do the work you own.**", "12. **Do the work you own.**"
+        )
+
+        with self.assertRaisesRegex(ValueError, "numbering"):
+            sync_style.build_snippet(body)
+
+    def test_install_snippet_section_is_regenerated_between_the_markers(self):
+        text = (ROOT / "INSTALL.md").read_text(encoding="utf-8")
+
+        self.assertIn(sync_style.SNIPPET_BEGIN, text)
+        self.assertIn(sync_style.SNIPPET_END, text)
+        self.assertIn(sync_style.build_snippet(self._canonical_body()), text)
+
+    def _canonical_body(self):
+        _, body = sync_style.split_frontmatter(
+            sync_style.CANONICAL.read_text(encoding="utf-8")
+        )
+        return body
+
     def test_skill_copy_and_cursor_skill_copy_are_identical(self):
         skill = (ROOT / "skills/attention-control/SKILL.md").read_text(encoding="utf-8")
         cursor = (ROOT / ".cursor/skills/attention-control/SKILL.md").read_text(encoding="utf-8")

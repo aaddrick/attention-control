@@ -10,6 +10,10 @@
 </p>
 
 <p align="center">
+  <a href="https://www.linkedin.com/in/aaddrick/">Connect on LinkedIn!</a>
+</p>
+
+<p align="center">
   <strong>English</strong> ·
   <a href=".github/readme/README.zh-CN.md">简体中文</a> ·
   <a href=".github/readme/README.ja.md">日本語</a> ·

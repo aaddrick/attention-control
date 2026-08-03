@@ -23,9 +23,29 @@
 <details open>
 <summary><strong>Claude Code</strong></summary>
 
+出力スタイルの枠を持つエージェントは Claude Code だけです。ターミナルで次の
+2 つのコマンドを実行します。
+
 ```bash
 claude plugin marketplace add aaddrick/attention-control
+```
+
+```bash
 claude plugin install attention-control@attention-control
+```
+
+Claude Code の中では、同じ 2 手順がスラッシュコマンドになります。
+
+```
+/plugin marketplace add aaddrick/attention-control
+```
+
+```
+/plugin install attention-control@attention-control
+```
+
+```
+/reload-plugins
 ```
 
 次に `/config` を実行し、**Output style** から **Attention Control** を選びます。
@@ -37,24 +57,52 @@ claude plugin install attention-control@attention-control
 { "outputStyle": "Attention Control" }
 ```
 
+毎セッションではなく 1 セッションだけ使うなら、プラグインが同梱するスキルを
+呼び出します。
+
+```
+/attention-control:attention-control
+```
+
+止めるときは「stop attention control」と伝えます。
+
 </details>
 
 <details>
 <summary><strong>Codex</strong></summary>
 
+Codex には出力スタイルの枠がありません。ルールはスキルとして届きます。
+
 ```bash
 codex plugin marketplace add aaddrick/attention-control --ref main
+```
+
+```bash
 codex plugin add attention-control@attention-control
 ```
 
-そのあと `$attention-control` と入力してスタイルを適用します。
+Codex の中では、`/plugins` がプラグインブラウザを開きます。
+
+新しいスレッドを開始し、スキルを入力します。
+
+```
+$attention-control:attention-control
+```
+
+Codex はプラグインのスキル名にプラグイン名を前置します。止めるときは
+「stop attention control」と伝えます。毎ターン適用するなら、
+[INSTALL.md](../../INSTALL.md#the-always-on-snippet) の常時適用スニペットを
+`~/.codex/AGENTS.md` に貼り付けます。
 
 </details>
 
 <details>
-<summary><strong>Cursor、Gemini CLI、手動インストール</strong></summary>
+<summary><strong>Cursor、Gemini CLI、Copilot、Zed、手動インストール</strong></summary>
 
-[INSTALL.md](../../INSTALL.md) を参照してください。
+[INSTALL.md](../../INSTALL.md) を参照してください。いずれも出力スタイルの枠を
+持たないため、ルールはスキル、ルールファイル、または `AGENTS.md` のブロックとして
+届きます。スキル経路では `/attention-control` と入力し、止めるときは
+「stop attention control」と伝えます。
 
 </details>
 
@@ -109,18 +157,19 @@ codex plugin add attention-control@attention-control
 
 ## 2 つのレイヤー
 
-**シェイプ**は、何をどの順で言うかを決めます。10 のルール。
+**シェイプ**は、何をどの順で言うかを決めます。11 のルール。
 
 1. 次のアクションから始める。
-2. 複数ステップの作業に番号を振る。
-3. 具体的な次の一手で終える。
-4. 脱線を抑える。
-5. 毎ターン状態を言い直す。
-6. 所要時間は具体的な単位で示す。
-7. 今、何が動くようになったかを示す。
-8. エラーは淡々と述べる。
-9. リストは 5 項目まで。
-10. 前置きなし、要約なし、締めの挨拶なし。
+2. 自分の担当分は自分でやる。
+3. 複数ステップの作業に番号を振る。
+4. 具体的な次の一手で終える。
+5. 脱線を抑える。
+6. 毎ターン状態を言い直す。
+7. 所要時間は具体的な単位で示す。
+8. 今、何が動くようになったかを示す。
+9. エラーは淡々と述べる。
+10. リストは 5 項目まで。
+11. 前置きなし、要約なし、締めの挨拶なし。
 
 **言語**は、各文の書き方を決めます。
 
@@ -134,22 +183,22 @@ codex plugin add attention-control@attention-control
 
 ## シェイプのルールが生まれた理由
 
-ADHD の読み方に関する 5 つの事実が、10 のシェイプルールすべてを生みます。下の表は、
+ADHD の読み方に関する 5 つの事実が、11 のシェイプルールすべてを生みます。下の表は、
 各事実がどのルールを生むかを示します。
 
 | 事実 | エージェントの動き |
 |---|---|
-| **作業記憶が小さい。** 画面にないものは存在しないのと同じです。 | 「X を覚えておいてください」とは書きません。毎ターン状態を言い直します。「5 ステップ中 3 ステップ完了: スキーマを変更しました。次: `scripts/backfill.py` を実行します。」（ルール 5、9） |
-| **答えを知ることと、答えを実行することは別。** 作業はその隙間で止まります。 | ラベルではなくコマンドを渡します。「不足しているヘッダーを追加する」はラベルです。`Authorization: Bearer ${token}` が修正です。（ルール 1、2） |
-| **着手が最も難しい。** | 最初の行は小さく、明確で、今すぐ実行できます。最後の行は 2 分以内に終わるアクションを 1 つ示します。「ファイルを開く」でも構いません。（ルール 1、3） |
-| **時間の見積もりが同じに感じられる。** 「少し手間がかかる」と「数時間」は同じに響きます。 | 「テストがカバーしていれば 15 分ほど、していなければ半日」と書きます。「それなりの作業」とは書きません。（ルール 6） |
-| **ドーパミンが乏しい。** 埋もれた成果は届きません。 | 変更のあとで結果を具体的に示します。「マジックリンクでログインできます。`npm run dev` を実行して `/login` を開いてください。」（ルール 7） |
+| **作業記憶が小さい。** 画面にないものは存在しないのと同じです。 | 「X を覚えておいてください」とは書きません。毎ターン状態を言い直します。「5 ステップ中 3 ステップ完了: スキーマを変更しました。次: `scripts/backfill.py` を実行します。」（ルール 6、10） |
+| **答えを知ることと、答えを実行することは別。** 作業はその隙間で止まります。 | 作業を読み手に投げ返さず、自分の担当分は自分で終わらせます。ラベルではなくコマンドを渡します。「不足しているヘッダーを追加する」はラベルです。`Authorization: Bearer ${token}` が修正です。（ルール 1、2、3） |
+| **着手が最も難しい。** | 最初の行は小さく、明確で、今すぐ実行できます。最後の行は 2 分以内に終わるアクションを 1 つ示します。「ファイルを開く」でも構いません。（ルール 1、4） |
+| **時間の見積もりが同じに感じられる。** 「少し手間がかかる」と「数時間」は同じに響きます。 | 「テストがカバーしていれば 15 分ほど、していなければ半日」と書きます。「それなりの作業」とは書きません。（ルール 7） |
+| **ドーパミンが乏しい。** 埋もれた成果は届きません。 | 変更のあとで結果を具体的に示します。「マジックリンクでログインできます。`npm run dev` を実行して `/login` を開いてください。」（ルール 8） |
 
-さらに 2 つのルールが注意そのものを守ります。ルール 4 は脱線を抑え、開いた作業を
-1 本に保ちます。ルール 10 は前置きと締めの挨拶を削り、答えを 1 行目から始めます。
+さらに 2 つのルールが注意そのものを守ります。ルール 5 は脱線を抑え、開いた作業を
+1 本に保ちます。ルール 11 は前置きと締めの挨拶を削り、答えを 1 行目から始めます。
 
 だからこのスタイルは「短くする」ことではありません。コマンド、数値、条件を削る
-簡潔さは、読み手に往復を 1 回強います。その往復が作業の流れを切ります。ルール 8 も
+簡潔さは、読み手に往復を 1 回強います。その往復が作業の流れを切ります。ルール 9 も
 同じ理屈です。エラーには場所、原因、修正を書き、前に「おっと」は付けません。
 動揺は情報ではなく、同じ注意を情報と奪い合います。
 
@@ -172,6 +221,9 @@ ADHD の診断は必要ありません。疲れた読み手、スマートフォ
 
 ```bash
 python3 scripts/run_evals.py validate
+```
+
+```bash
 python3 scripts/run_evals.py plan --trials 3
 ```
 
@@ -191,12 +243,21 @@ python3 scripts/run_evals.py plan --trials 3
 python3 scripts/sync_style.py
 ```
 
-自分のコピーに入れ替えます。
+自分のコピーに入れ替えます。1 コマンドずつ実行します。
 
 ```bash
 claude plugin uninstall attention-control
+```
+
+```bash
 claude plugin marketplace remove attention-control
+```
+
+```bash
 claude plugin marketplace add <your-username>/attention-control
+```
+
+```bash
 claude plugin install attention-control@attention-control
 ```
 

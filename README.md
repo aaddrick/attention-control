@@ -23,9 +23,29 @@
 <details open>
 <summary><strong>Claude Code</strong></summary>
 
+Claude Code is the only agent here with a native output style slot. Run these
+two commands in your terminal:
+
 ```bash
 claude plugin marketplace add aaddrick/attention-control
+```
+
+```bash
 claude plugin install attention-control@attention-control
+```
+
+Inside Claude Code, the same two steps are slash commands:
+
+```
+/plugin marketplace add aaddrick/attention-control
+```
+
+```
+/plugin install attention-control@attention-control
+```
+
+```
+/reload-plugins
 ```
 
 Then run `/config`, select **Output style**, and pick **Attention Control**. It
@@ -37,24 +57,49 @@ To skip the picker, add this to `~/.claude/settings.json`:
 { "outputStyle": "Attention Control" }
 ```
 
+For one session instead of every session, use the skill the plugin also ships:
+
+```
+/attention-control:attention-control
+```
+
+Say "stop attention control" to turn it off.
+
 </details>
 
 <details>
 <summary><strong>Codex</strong></summary>
 
+Codex has no output style slot, so the rules ship as a skill.
+
 ```bash
 codex plugin marketplace add aaddrick/attention-control --ref main
+```
+
+```bash
 codex plugin add attention-control@attention-control
 ```
 
-Then type `$attention-control` to apply the style.
+Inside Codex, `/plugins` opens the plugin browser instead.
+
+Start a new thread, then type the skill:
+
+```
+$attention-control:attention-control
+```
+
+Codex prefixes a plugin skill with the plugin name. Say "stop attention control"
+to turn it off. For every turn instead, put the always-on snippet from
+[INSTALL.md](./INSTALL.md#the-always-on-snippet) in `~/.codex/AGENTS.md`.
 
 </details>
 
 <details>
-<summary><strong>Cursor, Gemini CLI, and manual install</strong></summary>
+<summary><strong>Cursor, Gemini CLI, Copilot, Zed, and manual install</strong></summary>
 
-See [INSTALL.md](./INSTALL.md).
+See [INSTALL.md](./INSTALL.md). None of them has an output style slot, so the
+rules ship as a skill, a rules file, or an `AGENTS.md` block. On a skill route,
+type `/attention-control` and say "stop attention control" to turn it off.
 
 </details>
 
@@ -110,18 +155,19 @@ rules come from. See [Why the shape rules exist](#why-the-shape-rules-exist).
 
 ## The two layers
 
-**Shape** decides what you say and in what order. 10 rules:
+**Shape** decides what you say and in what order. 11 rules:
 
 1. Lead with the next action.
-2. Number multi-step work.
-3. End with one concrete next action.
-4. Suppress tangents.
-5. Restate state every turn.
-6. Give time estimates in concrete units.
-7. Show what now works.
-8. State errors flat.
-9. Cap lists at 5 items.
-10. No preamble, no recap, no closer.
+2. Do the work you own.
+3. Number multi-step work.
+4. End with one concrete next action.
+5. Suppress tangents.
+6. Restate state every turn.
+7. Give time estimates in concrete units.
+8. Show what now works.
+9. State errors flat.
+10. Cap lists at 5 items.
+11. No preamble, no recap, no closer.
 
 **Language** decides how each sentence reads. The short version:
 
@@ -175,6 +221,9 @@ measure length.
 
 ```bash
 python3 scripts/run_evals.py validate
+```
+
+```bash
 python3 scripts/run_evals.py plan --trials 3
 ```
 
@@ -196,12 +245,21 @@ agent-specific copy:
 python3 scripts/sync_style.py
 ```
 
-Swap your copy in:
+Swap your copy in, one command at a time:
 
 ```bash
 claude plugin uninstall attention-control
+```
+
+```bash
 claude plugin marketplace remove attention-control
+```
+
+```bash
 claude plugin marketplace add <your-username>/attention-control
+```
+
+```bash
 claude plugin install attention-control@attention-control
 ```
 

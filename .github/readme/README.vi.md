@@ -34,20 +34,6 @@ claude plugin marketplace add aaddrick/attention-control
 claude plugin install attention-control@attention-control
 ```
 
-Bên trong Claude Code, hai bước đó là lệnh gạch chéo:
-
-```
-/plugin marketplace add aaddrick/attention-control
-```
-
-```
-/plugin install attention-control@attention-control
-```
-
-```
-/reload-plugins
-```
-
 Sau đó chạy `/config`, chọn **Output style**, rồi chọn **Attention Control**. Nó
 có hiệu lực sau `/clear` hoặc ở phiên làm việc kế tiếp.
 
@@ -151,13 +137,16 @@ sinh ra từ người đọc đó. Xem
 
 ### Sau
 
-> Chạy `npm install jsonwebtoken@latest`, rồi sửa `src/auth.ts:42`.
+> Chạy `npm install jsonwebtoken@latest`.
 >
-> 1. Mở `src/auth.ts`
-> 2. Thay `verifyToken` (dòng 42–58) bằng đoạn mã bên dưới
-> 3. Chạy `npm test -- auth.spec.ts`
+> Tôi đã sửa `src/auth.ts:47`. `verifyToken` giờ nêu rõ thuật toán:
 >
-> Chữ ký cũ gây ra lỗi này. `jsonwebtoken` v9 đã bỏ dạng callback mà dòng 47 dùng.
+> `jwt.verify(token, secret, { algorithms: ["HS256"] }, callback);`
+>
+> Chạy `npm test -- auth.spec.ts`. Mất khoảng 10 giây.
+>
+> Lệnh gọi cũ không nêu thuật toán. `jsonwebtoken` v9 từ chối token không có chữ
+> ký trừ khi bạn truyền `algorithms: ["none"]`.
 >
 > Tiếp theo: dán dòng lỗi đầu tiên nếu một bài kiểm thử thất bại.
 

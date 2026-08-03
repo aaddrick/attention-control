@@ -9,6 +9,7 @@ These assertions cover the two drifts that reach a reader as a wrong command or
 a missing rule. They do not check the prose. A translator still owns that.
 """
 
+import collections
 import re
 import sys
 import unittest
@@ -25,6 +26,7 @@ ENGLISH = ROOT / "README.md"
 TRANSLATIONS = sorted((ROOT / ".github" / "readme").glob("README.*.md"))
 
 NUMBERED_ITEM = re.compile(r"^(\d+)\. ")
+INLINE_CODE = re.compile(r"`([^`\n]+)`")
 
 # A fence in one of these languages holds commands, paths, or settings. Every
 # README must carry it character for character, whatever the surrounding prose.
@@ -43,6 +45,10 @@ def fenced_lines(text: str) -> list[str]:
         if inside and language in VERBATIM_FENCES and line.strip():
             lines.append(line.strip())
     return lines
+
+
+def inline_code(text: str) -> collections.Counter:
+    return collections.Counter(INLINE_CODE.findall(text))
 
 
 def numbered_items(text: str) -> list[int]:
@@ -70,6 +76,24 @@ class ReadmeTest(unittest.TestCase):
                     expected,
                     fenced_lines(path.read_text(encoding="utf-8")),
                     "a command block drifted from README.md",
+                )
+
+    def test_every_readme_names_the_same_code(self):
+        # The before/after example is a blockquote, not a fence, so the fence
+        # test above cannot see it. Its commands, paths, and identifiers still
+        # have to survive translation. Compare the code spans as a multiset:
+        # Japanese and Korean reorder them inside a sentence, and word order is
+        # the translator's business. A dropped or renamed one is not.
+        expected = inline_code(self.english)
+        self.assertTrue(expected, "the English README names no code")
+
+        for path in TRANSLATIONS:
+            with self.subTest(readme=path.name):
+                found = inline_code(path.read_text(encoding="utf-8"))
+                self.assertEqual(
+                    expected,
+                    found,
+                    f"missing: {expected - found} / extra: {found - expected}",
                 )
 
     def test_every_readme_lists_every_shape_rule(self):

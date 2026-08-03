@@ -34,20 +34,6 @@ claude plugin marketplace add aaddrick/attention-control
 claude plugin install attention-control@attention-control
 ```
 
-Claude Code の中では、同じ 2 手順がスラッシュコマンドになります。
-
-```
-/plugin marketplace add aaddrick/attention-control
-```
-
-```
-/plugin install attention-control@attention-control
-```
-
-```
-/reload-plugins
-```
-
 次に `/config` を実行し、**Output style** から **Attention Control** を選びます。
 `/clear` または次のセッションから有効になります。
 
@@ -149,14 +135,16 @@ Codex はプラグインのスキル名にプラグイン名を前置します�
 
 ### 変更後
 
-> `npm install jsonwebtoken@latest` を実行し、`src/auth.ts:42` を編集します。
+> `npm install jsonwebtoken@latest` を実行します。
 >
-> 1. `src/auth.ts` を開く
-> 2. `verifyToken`（42〜58 行目）を下のコードに置き換える
-> 3. `npm test -- auth.spec.ts` を実行する
+> `src/auth.ts:47` を変更しました。`verifyToken` はアルゴリズムを明示します。
 >
-> 古いシグネチャが失敗の原因です。`jsonwebtoken` v9 は 47 行目が使うコールバック
-> 形式を削除しました。
+> `jwt.verify(token, secret, { algorithms: ["HS256"] }, callback);`
+>
+> `npm test -- auth.spec.ts` を実行します。10 秒ほどで終わります。
+>
+> 以前の呼び出しはアルゴリズムを指定しませんでした。`jsonwebtoken` v9 は、
+> `algorithms: ["none"]` を渡さない限り署名なしトークンを拒否します。
 >
 > 次: テストが失敗したら、最初のエラー行を貼ってください。
 

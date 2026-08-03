@@ -34,20 +34,6 @@ claude plugin marketplace add aaddrick/attention-control
 claude plugin install attention-control@attention-control
 ```
 
-Claude Code 안에서는 같은 두 단계가 슬래시 명령입니다.
-
-```
-/plugin marketplace add aaddrick/attention-control
-```
-
-```
-/plugin install attention-control@attention-control
-```
-
-```
-/reload-plugins
-```
-
 그다음 `/config`를 실행하고 **Output style**에서 **Attention Control**을 선택하세요.
 `/clear` 또는 다음 세션부터 적용됩니다.
 
@@ -146,14 +132,16 @@ control"이라고 말하세요. 매 턴 적용하려면
 
 ### 이후
 
-> `npm install jsonwebtoken@latest`를 실행한 다음 `src/auth.ts:42`를 편집하세요.
+> `npm install jsonwebtoken@latest`를 실행하세요.
 >
-> 1. `src/auth.ts`를 엽니다
-> 2. `verifyToken`(42~58행)을 아래 코드로 교체합니다
-> 3. `npm test -- auth.spec.ts`를 실행합니다
+> `src/auth.ts:47`을 바꿨습니다. `verifyToken`이 이제 알고리즘을 적습니다.
 >
-> 예전 시그니처가 실패의 원인입니다. `jsonwebtoken` v9는 47행이 사용하는 콜백
-> 형식을 제거했습니다.
+> `jwt.verify(token, secret, { algorithms: ["HS256"] }, callback);`
+>
+> `npm test -- auth.spec.ts`를 실행하세요. 10초쯤 걸립니다.
+>
+> 예전 호출은 알고리즘을 적지 않았습니다. `jsonwebtoken` v9는
+> `algorithms: ["none"]`을 넘기지 않으면 서명 없는 토큰을 거부합니다.
 >
 > 다음: 테스트가 실패하면 첫 번째 오류 줄을 붙여 넣으세요.
 

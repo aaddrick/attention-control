@@ -34,20 +34,6 @@ claude plugin marketplace add aaddrick/attention-control
 claude plugin install attention-control@attention-control
 ```
 
-Dentro do Claude Code, os mesmos dois passos são comandos de barra:
-
-```
-/plugin marketplace add aaddrick/attention-control
-```
-
-```
-/plugin install attention-control@attention-control
-```
-
-```
-/reload-plugins
-```
-
 Depois rode `/config`, selecione **Output style** e escolha **Attention Control**.
 Ele passa a valer depois de `/clear` ou na próxima sessão.
 
@@ -148,14 +134,16 @@ forma. Veja [Por que as regras de forma existem](#por-que-as-regras-de-forma-exi
 
 ### Depois
 
-> Rode `npm install jsonwebtoken@latest` e depois edite `src/auth.ts:42`.
+> Rode `npm install jsonwebtoken@latest`.
 >
-> 1. Abra `src/auth.ts`
-> 2. Substitua `verifyToken` (linhas 42–58) pelo trecho abaixo
-> 3. Rode `npm test -- auth.spec.ts`
+> Mudei `src/auth.ts:47`. `verifyToken` agora nomeia o algoritmo:
 >
-> A assinatura antiga causa a falha. O `jsonwebtoken` v9 removeu a forma de
-> callback que a linha 47 usa.
+> `jwt.verify(token, secret, { algorithms: ["HS256"] }, callback);`
+>
+> Rode `npm test -- auth.spec.ts`. Leva uns 10 segundos.
+>
+> A chamada antiga não nomeava o algoritmo. O `jsonwebtoken` v9 rejeita um token
+> sem assinatura a menos que você passe `algorithms: ["none"]`.
 >
 > Próximo passo: cole a primeira linha de erro se algum teste falhar.
 

@@ -34,20 +34,6 @@ claude plugin marketplace add aaddrick/attention-control
 claude plugin install attention-control@attention-control
 ```
 
-Inside Claude Code, the same two steps are slash commands:
-
-```
-/plugin marketplace add aaddrick/attention-control
-```
-
-```
-/plugin install attention-control@attention-control
-```
-
-```
-/reload-plugins
-```
-
 Then run `/config`, select **Output style**, and pick **Attention Control**. It
 takes effect after `/clear` or the next session.
 
@@ -146,14 +132,16 @@ rules come from. See [Why the shape rules exist](#why-the-shape-rules-exist).
 
 ### After
 
-> Run `npm install jsonwebtoken@latest`, then edit `src/auth.ts:42`.
+> Run `npm install jsonwebtoken@latest`.
 >
-> 1. Open `src/auth.ts`
-> 2. Replace `verifyToken` (lines 42–58) with the snippet below
-> 3. Run `npm test -- auth.spec.ts`
+> I changed `src/auth.ts:47`. `verifyToken` now names the algorithm:
 >
-> The old signature causes the failure. `jsonwebtoken` v9 removed the callback
-> form that line 47 uses.
+> `jwt.verify(token, secret, { algorithms: ["HS256"] }, callback);`
+>
+> Run `npm test -- auth.spec.ts`. It takes about 10 seconds.
+>
+> The old call named no algorithm. `jsonwebtoken` v9 rejects an unsigned token
+> unless you pass `algorithms: ["none"]`.
 >
 > Next: paste the first failing line if a test fails.
 

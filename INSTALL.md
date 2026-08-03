@@ -524,8 +524,13 @@ The first command installs to this workspace. `-g` installs for all projects.
 Pi calls skills as `/skill:attention-control` and needs
 `{ "enableSkillCommands": true }` in its `settings.json`.
 
-For a harness that reads `AGENTS.md`, copy this repo's generated
-[`AGENTS.md`](./AGENTS.md) into your project root instead.
+For a harness that reads `AGENTS.md`, paste
+[the always-on snippet](#the-always-on-snippet) into your project's
+`AGENTS.md`. For the full ruleset instead, copy the body of
+[`output-styles/attention-control.md`](./output-styles/attention-control.md).
+
+This repo's own `AGENTS.md` is a different file. It tells an agent how to work
+on this repository, and it mirrors `CLAUDE.md`.
 
 </details>
 

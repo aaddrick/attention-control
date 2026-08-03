@@ -1,6 +1,6 @@
 {
   "name": "attention-control",
   "version": "0.1.0",
-  "description": "Shape Gemini CLI output for an ADHD reader, then write each sentence in controlled English: action first, one word one meaning, active voice, state restated every turn.",
+  "description": "Air traffic control discipline for Gemini CLI output, written for a reader with ADHD: action first, one meaning per word, state restated every turn.",
   "contextFileName": "GEMINI.md"
 }

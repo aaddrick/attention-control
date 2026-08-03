@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "attention-control",
-      "description": "Output style that shapes every response for an ADHD reader and writes each sentence in controlled English.",
+      "description": "Output style that shapes every response for a reader with ADHD and writes each sentence in controlled English.",
       "source": "./",
       "category": "productivity",
       "keywords": [

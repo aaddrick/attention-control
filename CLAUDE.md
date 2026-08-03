@@ -121,6 +121,55 @@ baseline. Three rules protect the result.
 
 Design notes: [`evals/README.md`](./evals/README.md).
 
+### Filing a finished run
+
+A run costs about $11 and takes about two hours. File it so the next one can
+read it.
+
+`evals/results/` holds `LEDGER.md` and `runs/`. Nothing else. The five files
+the pipeline writes there are working state, not the committed form. Freeze
+moves them:
+
+```bash
+python3 scripts/ledger.py freeze \
+  --run-id 002 --slug recorded-model-rerun --date 2026-08-03 \
+  --judge-cost 7.19 --note "..." --note "..."
+python3 scripts/ledger.py index
+```
+
+Commit `runs/<id>-<slug>/` and the rebuilt `LEDGER.md` together. Never commit
+a loose `responses.jsonl`, `blind.jsonl`, `blind-key.jsonl`,
+`judgements.jsonl`, or `scores.jsonl`.
+
+Four rules on top of that.
+
+1. Pass one `--note` per finding. The notes reach `manifest.json`,
+   `report.md`, and `LEDGER.md`. A finding you leave in a pull request
+   comment is lost the moment the branch merges.
+2. Write the note against the run that produced it. Never edit a frozen run
+   to match what a later run found. Run 001 carries a note saying run 002
+   reworded the isolation prompt. Run 002 reworded nothing. The note stays
+   wrong, because rewriting it would rewrite finished history.
+3. Say what a run cannot compare against. `freeze` derives the comparability
+   key, but only a note explains why the key moved. Change one input per run.
+4. Report the share of the delta, not just the delta. Language and concision
+   carry 20% of the weight and restate the style's own rules. When they supply
+   most of the gain, the run measured prose control, and the correctness
+   number sits inside a confidence interval that crosses zero.
+
+### The isolation prompt
+
+`evals/runners.example.json` carries the runner system prompt. It must forbid
+inspecting the environment and deny no capability a case grants. Two wordings
+broke that and each cost a full run.
+
+`tests/test_run_evals.py` guards it with a negation-plus-capability pattern,
+not a list of literal phrases. The literal list passed the second bad wording
+through. Add any new denial you find to `CONTAMINATED_WORDINGS`.
+
+Editing this prompt changes the runner config hash, so no later run compares
+against an earlier one. Freeze the run before you touch it.
+
 ## Git
 
 Branch, then open a pull request. Never push to `main`. Merge with a rebase, so

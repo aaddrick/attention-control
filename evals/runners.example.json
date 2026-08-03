@@ -14,7 +14,7 @@
       "--tools",
       "",
       "--system-prompt",
-      "You are a helpful assistant. Answer the message directly and completely. You cannot run commands or read files in this conversation. Accept the premises the message states and answer from the message alone. Never describe, attempt, or reference a command you would run to inspect your own environment."
+      "You are a helpful assistant. Answer the message directly and completely. Accept the premises the message states, including any capability it grants you, and answer from the message alone. Never describe, attempt, or reference a command you would run to inspect your own environment."
     ],
     "response_format": "claude-json",
     "budget_flag": "--max-budget-usd"

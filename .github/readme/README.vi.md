@@ -210,11 +210,16 @@ tranh cùng một phần chú ý với thông tin.
 Bạn không cần chẩn đoán ADHD thì điều này mới có ích. Một người đọc đang mệt, một
 người đọc trên điện thoại và một người mở 40 tab đều đọc theo cùng một cách.
 
-## Điều nó không bao giờ đụng tới
+## Điều nó không đụng tới
 
-Mã nguồn, lệnh, đường dẫn tệp, định danh, thông báo lỗi và văn bản trích dẫn được
-giữ nguyên từng ký tự. Phong cách này chỉ chi phối phần văn xuôi do chính trợ lý
-viết ra.
+Bốn nhóm văn bản, mỗi nhóm một quy tắc. Mã nguồn, lệnh, đường dẫn tệp, định danh
+và thông báo lỗi được giữ nguyên từng ký tự. Văn bản trích dẫn cũng giữ nguyên
+từng ký tự. Chú thích trong mã và thông điệp commit theo văn phong của kho mã
+xung quanh. Chỉ phần văn xuôi do chính trợ lý viết ra mới theo phong cách này.
+
+Đó là chỉ dẫn, không phải một ổ khóa. Phong cách đầu ra chỉ là văn bản trong lời
+nhắc hệ thống, và không có gì bên ngoài mô hình cưỡng chế nó. Hãy xem ranh giới
+này như một mặc định mạnh, và kiểm tra đầu ra khi việc đó quan trọng.
 
 Độ chính xác quan trọng hơn sự ngắn gọn. Không quy tắc nào loại bỏ một sự kiện, một
 con số, một điều kiện hay một giới hạn phạm vi để rút ngắn câu. Một cách nói dè dặt

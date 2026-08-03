@@ -87,6 +87,27 @@ class SyncStyleTest(unittest.TestCase):
         )
         return body
 
+    def test_agents_md_mirrors_claude_md(self):
+        # Two file names, one text. A tool reads whichever it knows, and the
+        # pair cannot drift because one is generated from the other.
+        for target, source in sync_style.MIRRORS.items():
+            with self.subTest(target=str(target)):
+                mirror = (ROOT / target).read_text(encoding="utf-8")
+                original = (ROOT / source).read_text(encoding="utf-8")
+
+                self.assertIn(sync_style.MIRROR_GENERATED_BY, mirror)
+                body = mirror.replace(sync_style.MIRROR_GENERATED_BY, "", 1)
+                self.assertEqual(original.split(), body.split())
+
+    def test_the_root_agents_file_is_the_repository_guide(self):
+        # AGENTS.md tells an agent how to work on this repository. It is not a
+        # copy of the style. A tool that reads it must learn the one rule that
+        # breaks the build before it edits anything.
+        root = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+
+        self.assertIn("Never edit a generated file.", root)
+        self.assertIn("scripts/sync_style.py", root)
+
     def test_skill_copy_and_cursor_skill_copy_are_identical(self):
         skill = (ROOT / "skills/attention-control/SKILL.md").read_text(encoding="utf-8")
         cursor = (ROOT / ".cursor/skills/attention-control/SKILL.md").read_text(encoding="utf-8")

@@ -1,15 +1,23 @@
 name: checks
 
-# Three cheap gates that catch every failure mode a reviewer cannot see:
-# a derived copy that drifted from the canonical style, a malformed manifest,
-# and a broken evaluation case catalog.
+# Cheap gates that catch every failure mode a reviewer cannot see: a derived
+# copy that drifted from the canonical style, a malformed manifest or shipped
+# config, a broken evaluation case catalog, and a run ledger edited by hand.
 on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  checks:
+  gates:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,22 +26,42 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Every agent-specific copy matches the canonical style
+      - name: Install the YAML parser
+        run: pip install pyyaml
+
+      - name: Every generated copy matches the canonical style
         run: python3 scripts/sync_style.py --check
 
-      - name: Manifests parse as JSON
-        run: |
-          for manifest in .claude-plugin/marketplace.json \
-                          .claude-plugin/plugin.json \
-                          .codex-plugin/plugin.json \
-                          gemini-extension.json \
-                          evals/runners.example.json; do
-            python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$manifest" \
-              || { echo "::error file=$manifest::invalid JSON"; exit 1; }
-          done
+      - name: Every shipped config file parses
+        run: python3 scripts/check_configs.py
 
       - name: Evaluation cases are valid
         run: python3 scripts/run_evals.py validate
+
+      - name: The run ledger matches the frozen manifests
+        run: |
+          python3 scripts/ledger.py index --ledger "$RUNNER_TEMP/LEDGER.md"
+          diff -u evals/results/LEDGER.md "$RUNNER_TEMP/LEDGER.md" || {
+            echo "::error file=evals/results/LEDGER.md::the ledger does not match the run manifests. Run: python3 scripts/ledger.py index"
+            exit 1
+          }
+
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      # Both versions run to completion. One failure tells you more when you can
+      # see whether the other version passed.
+      fail-fast: false
+      matrix:
+        # 3.11 is the floor the scripts support. 3.14 is what development runs
+        # on, so a deprecation lands here before it lands in a working tree.
+        python-version: ["3.11", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
       - name: Unit tests
         run: python3 -m unittest discover -s tests -v

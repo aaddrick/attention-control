@@ -12,6 +12,19 @@ on:
       - .github/workflows/plugin-load-check.yml
   push:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plugin-load-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned so a CLI release breaks this job on the commit that bumps the pin,
+  # not on an unrelated pull request. Bump this line to test a newer CLI.
+  CLAUDE_CODE_VERSION: "2.1.220"
 
 jobs:
   load:
@@ -20,7 +33,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+        run: npm install -g "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION"
+
+      - name: Manifests pass the official validator
+        run: claude plugin validate "$GITHUB_WORKSPACE" --strict
 
       - name: Install the plugin from this checkout into a scratch config
         run: |
@@ -28,8 +44,17 @@ jobs:
           mkdir -p "$CLAUDE_CONFIG_DIR"
           claude plugin marketplace add "$GITHUB_WORKSPACE"
           claude plugin install attention-control@attention-control
-          claude plugin list | tee plugin-list.txt
-          grep -q "✔ enabled" plugin-list.txt || {
-            echo "::error::plugin failed to load; see claude plugin list output above"
-            exit 1
-          }
+          claude plugin list --json | tee "$RUNNER_TEMP/plugin-list.json"
+          python3 - "$RUNNER_TEMP/plugin-list.json" <<'PY'
+          import json
+          import sys
+
+          wanted = "attention-control@attention-control"
+          plugins = json.load(open(sys.argv[1], encoding="utf-8"))
+          loaded = [p for p in plugins if p.get("id") == wanted and p.get("enabled")]
+          if not loaded:
+              print(f"::error::{wanted} did not install and enable")
+              print(f"installed: {[p.get('id') for p in plugins]}")
+              sys.exit(1)
+          print(f"{wanted} loaded and enabled at version {loaded[0].get('version')}")
+          PY

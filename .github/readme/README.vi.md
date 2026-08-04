@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="../assets/hero.png" alt="Attention Control: kỷ luật của kiểm soát không lưu, áp dụng cho đầu ra của AI. Viết cho người đọc có ADHD. Hai phiếu tiến trình bay. Câu trả lời chưa áp dụng style tràn khỏi một ô duy nhất và rơi khỏi mép. Câu trả lời của Attention Control chia thành bốn trường: ACTION, EDIT, STATE, NEXT." width="100%">
+</p>
+
+<p align="center">
   <strong>Attention Control</strong><br>
   <em>Kỷ luật của kiểm soát không lưu, áp dụng cho đầu ra của AI.</em><br>
   <em>Viết cho người đọc có ADHD.</em>

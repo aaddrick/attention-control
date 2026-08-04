@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="../assets/hero.png" alt="Attention Control: 航空管制の規律を、AI の出力に。ADHD の読み手のために書かれています。2 枚のフライトプログレスストリップ。スタイルなしの応答は 1 つの枠からあふれ、端で切れている。Attention Control の応答は ACTION、EDIT、STATE、NEXT の 4 つの欄に分かれている。" width="100%">
+</p>
+
+<p align="center">
   <strong>Attention Control</strong><br>
   <em>航空管制の規律を、AI の出力に。</em><br>
   <em>ADHD の読み手のために書かれています。</em>

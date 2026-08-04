@@ -1,4 +1,8 @@
 <p align="center">
+  <img src=".github/assets/hero.png" alt="Attention Control: air traffic control discipline for agent output, written for a reader with ADHD. Two flight progress strips. The unstyled reply overruns a single box and falls off the edge. The Attention Control reply splits into four fields: ACTION, EDIT, STATE, NEXT." width="100%">
+</p>
+
+<p align="center">
   <strong>Attention Control</strong><br>
   <em>Air traffic control discipline for agent output.</em><br>
   <em>Written for a reader with ADHD.</em>

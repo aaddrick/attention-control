@@ -1,7 +1,7 @@
 # Notice
 
 This style combines two existing works. Neither author takes part in this
-project. This file credits both.
+project. This file credits both. It also credits two vendored typefaces.
 
 ## Shape layer
 
@@ -66,3 +66,22 @@ departures from the standard:
 
 "Simplified Technical English" and "ASD-STE100" name the source standard. The
 ASD does not certify, endorse, or sponsor this project.
+
+## Typefaces
+
+`assets/fonts/` holds five font files. `scripts/make_card.py` draws
+`.github/assets/hero.png` with them. Both families are licensed under the SIL
+Open Font License 1.1, and both license texts sit beside the fonts.
+
+**[Saira Condensed](https://github.com/google/fonts/tree/main/ofl/sairacondensed)**,
+version 0.072, copyright 2016 The Saira Project Authors. Three weights: Bold,
+SemiBold, Medium. License in
+[`assets/fonts/OFL-SairaCondensed.txt`](./assets/fonts/OFL-SairaCondensed.txt).
+
+**[IBM Plex Mono](https://github.com/google/fonts/tree/main/ofl/ibmplexmono)**,
+version 2.3, copyright 2017 IBM Corp. Two weights: Regular and Medium. License
+in [`assets/fonts/OFL-IBMPlexMono.txt`](./assets/fonts/OFL-IBMPlexMono.txt).
+
+The fonts are vendored, not downloaded at build time. A build that fetches from
+a branch is not reproducible, because the branch moves. Neither foundry nor IBM
+endorses this project.

@@ -118,6 +118,30 @@ python3 scripts/ledger.py index
 Python 3.11 is the floor. CI runs the tests on 3.11 and 3.14.
 `scripts/check_configs.py` needs PyYAML.
 
+## The hero card
+
+`.github/assets/hero.png` is the image at the top of all six READMEs, and the
+file uploaded as the repository's social preview. Redraw it after any change to
+its header text, its example, or its harness list:
+
+```bash
+python3 scripts/make_card.py
+```
+
+It needs Pillow and NumPy, and it reads the five vendored fonts in
+`assets/fonts/`. Neither package is a test dependency, so no gate runs this
+script and no gate compares the committed PNG against a fresh render. Pillow
+encodes the same pixels differently across versions, so a checksum gate would
+fail on an unrelated upgrade. Commit the redrawn file yourself.
+
+Two facts about the card that no test can hold:
+
+1. The card cites `src/auth.ts:47`, the same edit the README's "What changes"
+   section cites. Change one and you change both.
+2. Uploading the social preview is manual. GitHub takes `og:image` from
+   Settings, General, Social preview, not from README content, and exposes no
+   REST endpoint for it. Merging a new card does not change any link preview.
+
 ## Evaluations
 
 The harness in `scripts/run_evals.py` scores the style against an unstyled
@@ -199,6 +223,8 @@ Pull requests from outside contributors are closed at the repository level. See
 | `scripts/sync_style.py` | the generator and its `--check` gate |
 | `scripts/run_evals.py`, `scripts/judge.py`, `scripts/ledger.py` | the eval harness |
 | `scripts/check_configs.py` | parses every shipped manifest, TOML, and YAML file |
+| `scripts/make_card.py` | draws `.github/assets/hero.png`, the README and social-preview image |
+| `assets/fonts/` | the five vendored fonts the card is drawn with, and both OFL licenses |
 | `evals/` | cases, rubric, frozen runs, ledger |
 | `.claude-plugin/`, `.codex-plugin/`, `gemini-extension.json` | the plugin manifests |
 | `skills/attention-control/SKILL.md` | the style as a skill, for every non-Claude harness |

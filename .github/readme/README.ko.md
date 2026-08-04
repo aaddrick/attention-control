@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="../assets/hero.png" alt="Attention Control: 항공 교통 관제의 규율을 AI 출력에. ADHD 독자를 위해 썼습니다. 비행 진행 스트립 두 장. 스타일이 없는 응답은 상자 하나를 넘쳐 가장자리에서 잘린다. Attention Control 응답은 ACTION, EDIT, STATE, NEXT 네 칸으로 나뉜다." width="100%">
+</p>
+
+<p align="center">
   <strong>Attention Control</strong><br>
   <em>항공 교통 관제의 규율을 AI 출력에.</em><br>
   <em>ADHD 독자를 위해 썼습니다.</em>

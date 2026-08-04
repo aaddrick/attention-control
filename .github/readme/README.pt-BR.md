@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="../assets/hero.png" alt="Attention Control: a disciplina do controle de tráfego aéreo aplicada à saída da IA. Escrito para um leitor com TDAH. Duas fichas de progresso de voo. A resposta sem estilo transborda de uma única caixa e some na borda. A resposta do Attention Control se divide em quatro campos: ACTION, EDIT, STATE, NEXT." width="100%">
+</p>
+
+<p align="center">
   <strong>Attention Control</strong><br>
   <em>A disciplina do controle de tráfego aéreo aplicada à saída da IA.</em><br>
   <em>Escrito para um leitor com TDAH.</em>

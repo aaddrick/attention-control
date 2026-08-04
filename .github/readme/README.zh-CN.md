@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="../assets/hero.png" alt="Attention Control：用空中交通管制的纪律来约束 AI 的输出。为 ADHD 读者而写。两张飞行进程条。未应用样式的回复挤在一个方框里，溢出到边缘之外。Attention Control 的回复分成 ACTION、EDIT、STATE、NEXT 四栏。" width="100%">
+</p>
+
+<p align="center">
   <strong>Attention Control</strong><br>
   <em>用空中交通管制的纪律来约束 AI 的输出。</em><br>
   <em>为 ADHD 读者而写。</em>

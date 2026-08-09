@@ -26,11 +26,48 @@ ENGLISH = ROOT / "README.md"
 TRANSLATIONS = sorted((ROOT / ".github" / "readme").glob("README.*.md"))
 
 NUMBERED_ITEM = re.compile(r"^(\d+)\. ")
-INLINE_CODE = re.compile(r"`([^`\n]+)`")
+
+# Deliberately allows a newline inside a span. These files are hard-wrapped, so
+# `claude plugin\nlist` is ordinary Markdown that renders as one identifier, and
+# a pattern anchored to the line does not merely miss such a span: it pairs that
+# span's closing backtick with the next span's opening one and captures the
+# prose between them. The census then holds a phantom entry no translation can
+# reproduce without leaving a clause in English, and silently stops pinning the
+# two real identifiers it existed for.
+#
+# No span in these six files wraps today, so nothing is mispinned. The problem
+# is that this is true by accident, and the accident ends the first time someone
+# rewraps a paragraph — in a commit that looks like prose editing.
+INLINE_CODE = re.compile(r"`([^`]+)`")
+
+FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
 
 # A fence in one of these languages holds commands, paths, or settings. Every
 # README must carry it character for character, whatever the surrounding prose.
 VERBATIM_FENCES = frozenset({"bash", "json", "toml", ""})
+
+
+def strip_fences(text: str) -> str:
+    """Blank out fenced blocks, preserving line count.
+
+    Required by the newline-tolerant pattern above, which would otherwise pair
+    the backticks of two fence delimiters and swallow a whole block as a single
+    enormous span. Fence content is compared verbatim by its own test, so the
+    census loses nothing by not reading it.
+    """
+    out, fence = [], None
+    for line in text.split("\n"):
+        marker = FENCE.match(line)
+        if marker:
+            char = marker.group(1)[0]
+            if fence is None:
+                fence = char
+            elif fence == char:
+                fence = None
+            out.append("")
+            continue
+        out.append("" if fence else line)
+    return "\n".join(out)
 
 
 def fenced_lines(text: str) -> list[str]:
@@ -48,7 +85,15 @@ def fenced_lines(text: str) -> list[str]:
 
 
 def inline_code(text: str) -> collections.Counter:
-    return collections.Counter(INLINE_CODE.findall(text))
+    """Every inline code span, whitespace-normalized, fences excluded.
+
+    Normalized because a span that survives a line break renders as one
+    identifier, and the translation that fits it on one line is naming the same
+    thing.
+    """
+    return collections.Counter(
+        " ".join(span.split()) for span in INLINE_CODE.findall(strip_fences(text))
+    )
 
 
 def numbered_items(text: str) -> list[int]:
@@ -57,6 +102,42 @@ def numbered_items(text: str) -> list[int]:
         for line in text.split("\n")
         if (match := NUMBERED_ITEM.match(line))
     ]
+
+
+class CensusTest(unittest.TestCase):
+    """The span census against the shapes that broke it in the sibling repo.
+
+    These assert on constructed strings rather than on the READMEs, because the
+    failure being guarded is one no current README exhibits. A gate whose only
+    evidence is that the tree happens to pass it is a gate nobody can tell is
+    working, and this one was silently exact for the wrong reason until the same
+    pattern shipped a phantom span elsewhere.
+    """
+
+    def test_a_span_that_survives_a_line_break_is_one_identifier(self):
+        wrapped = "Run `claude plugin\nlist` and check for `enabled`."
+        flat = "Run `claude plugin list` and check for `enabled`."
+        self.assertEqual(inline_code(wrapped), inline_code(flat))
+
+    def test_the_prose_between_two_spans_is_never_captured(self):
+        """The specific failure: pairing one span's closing backtick with the
+        next span's opening one, so a clause of English enters the census."""
+        census = inline_code("Run `claude plugin\nlist` and check for `enabled`.")
+        self.assertEqual(census, collections.Counter({"claude plugin list": 1, "enabled": 1}))
+        self.assertNotIn(" and check for ", census)
+
+    def test_a_fenced_block_contributes_nothing(self):
+        """Without stripping, the newline-tolerant pattern pairs the backticks
+        of two fence delimiters and swallows the block as one span."""
+        self.assertEqual(inline_code("```bash\nclaude --version\n```\n"), collections.Counter())
+
+    def test_a_fence_between_two_spans_does_not_join_them(self):
+        text = "See `alpha`.\n\n```bash\nrun me\n```\n\nThen `beta`.\n"
+        self.assertEqual(inline_code(text), collections.Counter({"alpha": 1, "beta": 1}))
+
+    def test_the_census_reads_the_real_readmes(self):
+        """A helper that returned nothing would pass every assertion above."""
+        self.assertGreater(sum(inline_code(ENGLISH.read_text(encoding="utf-8")).values()), 20)
 
 
 class ReadmeTest(unittest.TestCase):
